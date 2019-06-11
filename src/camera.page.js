@@ -19,6 +19,7 @@ export default class CameraPage extends React.Component {
     ratio: '4:3',
     cameraWidth: winWidth,
     cameraHeight: winHeight,
+    pendingPhotoData: null,
     hasCameraPermission: null,
   };
 
@@ -26,19 +27,11 @@ export default class CameraPage extends React.Component {
   setCameraType = (cameraType) => this.setState({ cameraType });
   handleCaptureIn = () => this.setState({ capturing: true });
 
-  handleCaptureOut = () => {
-    if (this.state.capturing)
-      this.camera.stopRecording();
-  };
-
-  handleShortCapture = async () => {
-    const photoData = await this.camera.takePictureAsync();
-    this.setState({ capturing: false, captures: [photoData, ...this.state.captures] });
-  };
-
-  handleLongCapture = async () => {
-    const videoData = await this.camera.recordAsync();
-    this.setState({ capturing: false, captures: [videoData, ...this.state.captures] });
+  handleCaptureOut = async () => {
+    this.setState({ capturing: false });
+    const pendingPhotoData = await this.camera.takePictureAsync();
+    this.setState({ pendingPhotoData });
+    //this.setState({ captures: [photoData, ...this.state.captures] });
   };
 
   setRatio = async () => {
@@ -71,8 +64,7 @@ export default class CameraPage extends React.Component {
 
   async componentDidMount() {
     const camera = await Permissions.askAsync(Permissions.CAMERA);
-    const audio = await Permissions.askAsync(Permissions.AUDIO_RECORDING);
-    const hasCameraPermission = (camera.status === 'granted' && audio.status === 'granted');
+    const hasCameraPermission = camera.status === 'granted';
 
     this.setState({ hasCameraPermission });
 
@@ -110,8 +102,6 @@ export default class CameraPage extends React.Component {
           setCameraType={this.setCameraType}
           onCaptureIn={this.handleCaptureIn}
           onCaptureOut={this.handleCaptureOut}
-          onShortCapture={this.handleShortCapture}
-          onLongCapture={this.handleLongCapture}
         />
       </React.Fragment>
     );
