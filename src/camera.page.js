@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, Dimensions } from 'react-native';
+import { View, Text, Dimensions, TouchableOpacity, StatusBar } from 'react-native';
 import { Camera } from 'expo-camera';
 import * as Permissions from 'expo-permissions';
 
 import Toolbar from './toolbar.component';
 import Gallery from './gallery.component';
+import AcceptReject from './acceptReject.component';
 import styles from './styles';
 
 const { width: winWidth, height: winHeight } = Dimensions.get('window');
@@ -31,7 +32,18 @@ export default class CameraPage extends React.Component {
     this.setState({ capturing: false });
     const pendingPhotoData = await this.camera.takePictureAsync();
     this.setState({ pendingPhotoData });
+    this.camera.pausePreview();
     //this.setState({ captures: [photoData, ...this.state.captures] });
+  };
+
+  handleSavePhotoData = () => {
+    this.setState({ pendingPhotoData: null, captures: [this.state.pendingPhotoData, ...this.state.captures] });
+    this.camera.resumePreview();
+  };
+
+  handleDiscardPhotoData = () => {
+    this.setState({ pendingPhotoData: null });
+    this.camera.resumePreview();
   };
 
   setRatio = async () => {
@@ -72,16 +84,18 @@ export default class CameraPage extends React.Component {
   };
 
   render() {
-    const { hasCameraPermission, flashMode, cameraType, capturing, captures, ratio, cameraWidth, cameraHeight } = this.state;
+    const { hasCameraPermission, flashMode, cameraType, capturing, captures, ratio, cameraWidth, cameraHeight, pendingPhotoData } = this.state;
 
     if (hasCameraPermission === null) {
       return <View />;
     } else if (hasCameraPermission === false) {
-      return <Text>Access to camera was denied.</Text>
+      return <Text>Access to camera was denied.</Text>;
     }
 
     return (
       <React.Fragment>
+        <StatusBar hidden />
+
         <View>
           <Camera
             type={cameraType}
@@ -91,18 +105,35 @@ export default class CameraPage extends React.Component {
             ref={camera => this.camera = camera}
           />
         </View>
+        
+        {pendingPhotoData ? 
+          <AcceptReject 
+            savePhotoData={this.handleSavePhotoData}
+            discardPhotoData={this.handleDiscardPhotoData}
+          />
+          :
+          <React.Fragment>
+            <TouchableOpacity style={styles.leftTopBtn}>
+              <Text style={styles.btnText}>Cancel</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.rightTopBtn}>
+              <Text style={styles.btnText}>Done</Text>
+            </TouchableOpacity>
 
-        {captures.length > 0 && <Gallery captures={captures} />}
+            {captures.length > 0 && <Gallery captures={captures} />}
 
-        <Toolbar 
-          capturing={capturing}
-          flashMode={flashMode}
-          cameraType={cameraType}
-          setFlashMode={this.setFlashMode}
-          setCameraType={this.setCameraType}
-          onCaptureIn={this.handleCaptureIn}
-          onCaptureOut={this.handleCaptureOut}
-        />
+            <Toolbar 
+              capturing={capturing}
+              flashMode={flashMode}
+              cameraType={cameraType}
+              setFlashMode={this.setFlashMode}
+              setCameraType={this.setCameraType}
+              onCaptureIn={this.handleCaptureIn}
+              onCaptureOut={this.handleCaptureOut}
+            />
+          </React.Fragment>
+        }
       </React.Fragment>
     );
   };

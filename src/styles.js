@@ -47,4 +47,27 @@ export default StyleSheet.create({
     width: 75,
     height: 75,
   },
+  acceptBtn: {
+    width: 62,
+    height: 62,
+    backgroundColor: '#1F85DE',
+    borderRadius: 100,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  leftTopBtn: {
+    position: 'absolute',
+    left: 25,
+    top: 25,
+  },
+  rightTopBtn: {
+    position: 'absolute',
+    right: 25,
+    top: 25,
+  },
+  btnText: {
+    color: 'white',
+    fontSize: 15,
+  },
 });
