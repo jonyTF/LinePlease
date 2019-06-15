@@ -2,14 +2,16 @@ import React from 'react';
 import { View, Text, Dimensions, TouchableOpacity, StatusBar } from 'react-native';
 import { Camera } from 'expo-camera';
 import * as Permissions from 'expo-permissions';
+import { NavigationEvents } from 'react-navigation';
 
 import Toolbar from './toolbar.component';
 import Gallery from './gallery.component';
 import AcceptReject from './acceptReject.component';
-import styles from './styles';
+import styles from '../styles';
 
 const { width: winWidth, height: winHeight } = Dimensions.get('window');
 
+// TODO: Make buttons more visible by adding a transparent (gray) background behind them
 export default class CameraPage extends React.Component {
   camera = null;
   state = {
@@ -22,6 +24,7 @@ export default class CameraPage extends React.Component {
     cameraHeight: winHeight,
     pendingPhotoData: null,
     hasCameraPermission: null,
+    cameraOn: true,
   };
 
   setFlashMode = (flashMode) => this.setState({ flashMode });
@@ -30,7 +33,7 @@ export default class CameraPage extends React.Component {
 
   handleCaptureOut = async () => {
     this.setState({ capturing: false });
-    const pendingPhotoData = await this.camera.takePictureAsync();
+    const pendingPhotoData = await this.camera.takePictureAsync({ skipProcessing: true });
     this.setState({ pendingPhotoData });
     this.camera.pausePreview();
     //this.setState({ captures: [photoData, ...this.state.captures] });
@@ -84,7 +87,7 @@ export default class CameraPage extends React.Component {
   };
 
   render() {
-    const { hasCameraPermission, flashMode, cameraType, capturing, captures, ratio, cameraWidth, cameraHeight, pendingPhotoData } = this.state;
+    const { hasCameraPermission, flashMode, cameraType, capturing, captures, ratio, cameraWidth, cameraHeight, pendingPhotoData, cameraOn } = this.state;
 
     if (hasCameraPermission === null) {
       return <View />;
@@ -96,14 +99,22 @@ export default class CameraPage extends React.Component {
       <React.Fragment>
         <StatusBar hidden />
 
+        <NavigationEvents 
+          onWillFocus={() => this.setState({ cameraOn: true })}
+          onDidBlur={() => this.setState({ cameraOn: false })}
+        />
+        
+        
         <View>
-          <Camera
-            type={cameraType}
-            ratio={ratio}
-            flashMode={flashMode}
-            style={[styles.preview, {width: cameraWidth, height: cameraHeight}]}
-            ref={camera => this.camera = camera}
-          />
+          { cameraOn &&
+            <Camera
+              type={cameraType}
+              ratio={ratio}
+              flashMode={flashMode}
+              style={[styles.preview, {width: cameraWidth, height: cameraHeight}]}
+              ref={camera => this.camera = camera}
+            />
+          }
         </View>
         
         {pendingPhotoData ? 
@@ -113,11 +124,11 @@ export default class CameraPage extends React.Component {
           />
           :
           <React.Fragment>
-            <TouchableOpacity style={styles.leftTopBtn}>
+            <TouchableOpacity style={styles.leftTopBtn} onPress={null}>
               <Text style={styles.btnText}>Cancel</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.rightTopBtn}>
+            <TouchableOpacity style={styles.rightTopBtn} onPress={() => this.props.navigation.navigate('Upload', { captures })}>
               <Text style={styles.btnText}>Done</Text>
             </TouchableOpacity>
 

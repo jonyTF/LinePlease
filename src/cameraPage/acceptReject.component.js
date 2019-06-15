@@ -3,7 +3,7 @@ import { Col, Row, Grid } from 'react-native-easy-grid';
 import { TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import styles from './styles';
+import styles from '../styles';
 
 export default ({savePhotoData, discardPhotoData}) => (
   <Grid style={styles.bottomToolbar}>
