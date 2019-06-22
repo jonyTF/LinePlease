@@ -3,6 +3,7 @@ import { View, Text, Dimensions, TouchableOpacity, StatusBar } from 'react-nativ
 import { Camera } from 'expo-camera';
 import * as Permissions from 'expo-permissions';
 import { NavigationEvents } from 'react-navigation';
+import * as ImagePicker from 'expo-image-picker';
 
 import Toolbar from './toolbar.component';
 import Gallery from './gallery.component';
@@ -12,6 +13,8 @@ import styles from '../styles';
 const { width: winWidth, height: winHeight } = Dimensions.get('window');
 
 // TODO: Make buttons more visible by adding a transparent (gray) background behind them
+// TODO: After taking picture, add controls to straighten the image with a grid (by rotating)
+//       and crop so it's only the text
 export default class CameraPage extends React.Component {
   camera = null;
   state = {
@@ -28,9 +31,15 @@ export default class CameraPage extends React.Component {
   };
 
   setFlashMode = (flashMode) => this.setState({ flashMode });
-  setCameraType = (cameraType) => this.setState({ cameraType });
   handleCaptureIn = () => this.setState({ capturing: true });
 
+  pickImage = async () => {
+    const image = await ImagePicker.launchImageLibraryAsync({ 
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, 
+    });
+    this.setState ({ captures: [image, ...this.state.captures] });
+  };
+  
   handleCaptureOut = async () => {
     this.setState({ capturing: false });
     const pendingPhotoData = await this.camera.takePictureAsync({ skipProcessing: true });
@@ -79,7 +88,8 @@ export default class CameraPage extends React.Component {
 
   async componentDidMount() {
     const camera = await Permissions.askAsync(Permissions.CAMERA);
-    const hasCameraPermission = camera.status === 'granted';
+    const cameraRoll = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+    const hasCameraPermission = (camera.status === 'granted' && cameraRoll.status === 'granted');
 
     this.setState({ hasCameraPermission });
 
@@ -139,7 +149,7 @@ export default class CameraPage extends React.Component {
               flashMode={flashMode}
               cameraType={cameraType}
               setFlashMode={this.setFlashMode}
-              setCameraType={this.setCameraType}
+              pickImage={this.pickImage}
               onCaptureIn={this.handleCaptureIn}
               onCaptureOut={this.handleCaptureOut}
             />

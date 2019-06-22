@@ -10,9 +10,8 @@ const { FlashMode: CameraFlashModes, Type: CameraTypes } = Camera.Constants;
 
 export default ({
   capturing = false,
-  cameraType = CameraTypes.back,
   flashMode = CameraFlashModes.off,
-  setFlashMode, setCameraType,
+  setFlashMode, pickImage,
   onCaptureIn, onCaptureOut
 }) => (
   <Grid style={styles.bottomToolbar}>
@@ -40,11 +39,9 @@ export default ({
         </TouchableWithoutFeedback>
       </Col>
       <Col style={styles.alignCenter}>
-        <TouchableOpacity onPress={() => setCameraType(
-          cameraType === CameraTypes.back ? CameraTypes.front : CameraTypes.back
-        )}>
+        <TouchableOpacity onPress={() => pickImage()}>
           <Ionicons
-            name="md-reverse-camera"
+            name="md-photos"
             color="white"
             size={30}
           />

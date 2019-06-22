@@ -70,4 +70,7 @@ export default StyleSheet.create({
     color: 'white',
     fontSize: 15,
   },
+  btn: {
+    margin: 10
+  }
 });

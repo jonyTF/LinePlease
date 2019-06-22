@@ -1,19 +1,23 @@
 import React from 'react';
-import { Text, View, Image, Dimensions } from 'react-native';
+import { Text, View, Image, Dimensions, StatusBar, Button } from 'react-native';
 import * as ImageManipulator from 'expo-image-manipulator';
 import Config from 'react-native-config';
 import * as FileSystem from 'expo-file-system';
+import { ScreenOrientation } from 'expo';
 
 import styles from '../styles';
+import data from './testdata';
 
 const { width: winWidth, height: winHeight } = Dimensions.get('window');
 
 export default class UploadPage extends React.Component {
   state = {
     croppedLines: [],
+    curLine: 0,
   };
 
   componentDidMount() {
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_LEFT);
     const captures = this.props.navigation.getParam('captures', []);
     if (captures.length > 0)
       this.cropLines(captures[0]);
@@ -96,10 +100,16 @@ export default class UploadPage extends React.Component {
   };
 
   cropLines = async (capture) => {
-    const ocrData = await this.getImageText(capture);
-    const textOverlay = ocrData.overlay;
-    const orientation = ocrData.orientation;
+    console.log('GET OCR DATA');
+    //const ocrData = await this.getImageText(capture);
+
+    console.log('CROPPED LINES START');
+    //const textOverlay = ocrData.overlay;
+    //const orientation = parseInt(ocrData.orientation);
+    const textOverlay = data;
+    const orientation = 0;
     console.log(textOverlay);
+    
     if ('error' in textOverlay) {
       console.log('ERROR');
       console.log(textOverlay.error);
@@ -118,16 +128,24 @@ export default class UploadPage extends React.Component {
     const imWidth = isSideways ? capture.height : capture.width;
     const imHeight = isSideways ? capture.width : capture.height;
 
+    const screenFactor = winHeight/imWidth;
+
     for (let line of textOverlay.Lines) {
       const firstWord = line.Words[0].WordText;
       if (firstWord.length >= 2 && firstWord === firstWord.toUpperCase()) {
-        bot = line.MinTop;
+        bot = line.MinTop * screenFactor;
         cropY.push({top, bot});
         top = bot;
       }
     }
-    cropY.push({top, bot: imHeight});
+    cropY.push({top, bot: imHeight*screenFactor});
+    console.log('crop list done');
 
+    console.log(cropY);
+    console.log(capture.height);
+    // TODO: convert cropY to screen coordinates
+
+    /*
     let croppedImages = [];
     for (let crop of cropY) {
       const croppedImage = await ImageManipulator.manipulateAsync(
@@ -144,41 +162,63 @@ export default class UploadPage extends React.Component {
         croppedImages
       }]
     });
+    */
+    this.setState({ 
+      croppedLines: [...this.state.croppedLines, cropY]
+    });
 
+    console.log('CROPPED LINES DONE');
     //console.log(this.state.croppedLines);
   }
 
   render() {
     const captures = this.props.navigation.getParam('captures', []);
-    const { croppedLines } = this.state;
-    console.log(croppedLines);
+    const { croppedLines, curLine } = this.state;
+    const curCropList = croppedLines[0];
 
     return (
-      <View>
-        {
-          croppedLines.map((curPage) => {
-            return curPage.croppedImages.map((image) => {
-              console.log(image);
-              return (
-                <Image 
-                  key={image.uri}
-                  source={{ uri: image.uri }}
-                  style={{ width: winWidth, height: image.height * winWidth/image.width, marginBottom: 15}}
-                />
-              );
-            })
-          })
-        }
+      <React.Fragment>
+        <StatusBar hidden={true} />
+        <View>
+          {/*
+            croppedLines.map((curPage) => {
+              return curPage.croppedImages.map((image) => {
+                console.log(image);
+                return (
+                  <Image 
+                    key={image.uri}
+                    source={{ uri: image.uri }}
+                    style={{ width: winHeight, height: image.height * winHeight/image.width, marginBottom: 15}}
+                  />
+                );
+              })
+            })*/
+          }
 
-        {
-          /*croppedLines.length > 0 && 
+          {
+            /*croppedLines.length > 0 && 
+            <Image 
+              source={{uri: croppedLines[0].croppedImages[0].uri}}
+              style={{ width: 1000, height: 300}}
+            />
+            */
+          }
+
+          { croppedLines.length > 0 &&
           <Image 
-            source={{uri: croppedLines[0].croppedImages[0].uri}}
-            style={{ width: 1000, height: 300}}
+            source={{uri: captures[0].uri}}
+            style={ // TODO: use `top` w/ negative numbers to center the correct line  
+                  {  width: winHeight, 
+                      height: captures[0].height * winHeight/captures[0].width,
+                      position: 'absolute',  
+                      top: winWidth/2 - (curCropList[curLine].bot-curCropList[curLine].top)/2 - curCropList[curLine].top,
+                  }}
           />
-          */
-        }
-      </View>
+          }
+
+          <Button title="TEST" onPress={() => {if (curLine + 1 < curCropList.length) this.setState({ curLine: curLine + 1 })}} style={{position: 'absolute', top: 10, right: 10}}/>
+        </View>
+      </React.Fragment>
     );
   };
 }
