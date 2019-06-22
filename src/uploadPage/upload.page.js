@@ -1,9 +1,10 @@
 import React from 'react';
-import { Text, View, Image, Dimensions, StatusBar, Button } from 'react-native';
+import { Text, View, Image, Dimensions, StatusBar, Button, TouchableOpacity } from 'react-native';
 import * as ImageManipulator from 'expo-image-manipulator';
 import Config from 'react-native-config';
 import * as FileSystem from 'expo-file-system';
 import { ScreenOrientation } from 'expo';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import styles from '../styles';
 import data from './testdata';
@@ -171,6 +172,19 @@ export default class UploadPage extends React.Component {
     //console.log(this.state.croppedLines);
   }
 
+  nextLine = () => {
+    const { croppedLines, curLine } = this.state;
+    const curCropList = croppedLines[0];
+    if (curLine + 1 < curCropList.length) 
+      this.setState({ curLine: curLine + 1 });
+  };
+
+  prevLine = () => {
+    const { curLine } = this.state;
+    if (curLine - 1 >= 0) 
+      this.setState({ curLine: curLine - 1 });
+  };
+
   render() {
     const captures = this.props.navigation.getParam('captures', []);
     const { croppedLines, curLine } = this.state;
@@ -204,19 +218,45 @@ export default class UploadPage extends React.Component {
             */
           }
 
-          { croppedLines.length > 0 &&
-          <Image 
-            source={{uri: captures[0].uri}}
-            style={ // TODO: use `top` w/ negative numbers to center the correct line  
-                  {  width: winHeight, 
-                      height: captures[0].height * winHeight/captures[0].width,
-                      position: 'absolute',  
-                      top: winWidth/2 - (curCropList[curLine].bot-curCropList[curLine].top)/2 - curCropList[curLine].top,
-                  }}
-          />
-          }
+          
 
-          <Button title="TEST" onPress={() => {if (curLine + 1 < curCropList.length) this.setState({ curLine: curLine + 1 })}} style={{position: 'absolute', top: 10, right: 10}}/>
+          { croppedLines.length > 0 && 
+          <View>
+            <Image 
+              source={{uri: captures[0].uri}}
+              style={ // TODO: use `top` w/ negative numbers to center the correct line  
+                    {  width: winHeight, 
+                        height: captures[0].height * winHeight/captures[0].width,
+                        position: 'absolute',  
+                        top: winWidth/2 - (curCropList[curLine].bot-curCropList[curLine].top)/2 - curCropList[curLine].top,
+                    }}
+            />
+            <LinearGradient
+              colors={['rgba(0, 0, 0, 0.9)', 'rgba(0, 0, 0, 0.5)']}
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: winHeight,
+                height: (winWidth - (curCropList[curLine].bot-curCropList[curLine].top)) / 2,
+              }}
+            >
+              <TouchableOpacity onPress={this.prevLine} style={{flex: 1}} />
+            </LinearGradient>
+            <LinearGradient
+              colors={['rgba(0, 0, 0, 0.5)', 'rgba(0, 0, 0, 0.9)']}
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: (winWidth - (curCropList[curLine].bot-curCropList[curLine].top)) / 2 + (curCropList[curLine].bot-curCropList[curLine].top),
+                width: winHeight,
+                height: (winWidth - (curCropList[curLine].bot-curCropList[curLine].top)) / 2,
+              }}
+            >
+              <TouchableOpacity onPress={this.nextLine} style={{flex: 1}} />
+            </LinearGradient>
+          </View>
+          }
         </View>
       </React.Fragment>
     );
