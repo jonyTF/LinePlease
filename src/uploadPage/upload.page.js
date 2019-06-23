@@ -11,10 +11,14 @@ import data from './testdata';
 
 const { width: winWidth, height: winHeight } = Dimensions.get('window');
 
+// TODO: Add zooming and horizontal panning
+
 export default class UploadPage extends React.Component {
   state = {
     croppedLines: [],
     curLine: 0,
+    curCharacters: ['FJ:', 'F):', 'F]:'],
+    linesByCharacter: {},
   };
 
   componentDidMount() {
@@ -100,6 +104,29 @@ export default class UploadPage extends React.Component {
     return textOverlay;
   };
 
+  addToCharacterLines = (curName, curWords) => {
+    console.log(curName);
+    if (curName in this.state.linesByCharacter) {
+      this.state.linesByCharacter[curName] = this.state.linesByCharacter[curName].concat(curWords);
+    } else { 
+      this.state.linesByCharacter[curName] = curWords;
+    }
+  };
+
+  normalizeWordCoords = (words, screenFactor) => {
+    // Normalizes ocr space coords to window coords
+    for (let i = 0; i < words.length; i++) {
+      words[i].Height *= screenFactor;
+      words[i].Width *= screenFactor;
+      words[i].Left *= screenFactor;
+      words[i].Top *= screenFactor;
+    }
+  };
+
+  isName = (text) => {
+    return text.length >= 2 && text === text.toUpperCase();
+  };
+
   cropLines = async (capture) => {
     console.log('GET OCR DATA');
     //const ocrData = await this.getImageText(capture);
@@ -131,45 +158,46 @@ export default class UploadPage extends React.Component {
 
     const screenFactor = winHeight/imWidth;
 
+    let curName = '';
+    let curWords = [];
     for (let line of textOverlay.Lines) {
       const firstWord = line.Words[0].WordText;
-      if (firstWord.length >= 2 && firstWord === firstWord.toUpperCase()) {
+      if (this.isName(firstWord)) {
+        // If the current line has a name in it
+        if (curName.length > 0) {
+          this.normalizeWordCoords(curWords, screenFactor);
+          this.addToCharacterLines(curName, curWords);
+          curName = '';
+          curWords = [];
+        }
+
         bot = line.MinTop * screenFactor;
         cropY.push({top, bot});
         top = bot;
+
+        curName = firstWord;
+
+        let i;
+        for (i = 1; i < line.Words.length; i++) {
+          if (this.isName(line.Words[i].WordText))
+            curName += ' ' + line.Words[i].WordText;
+          else
+            break;
+        }
+
+        curWords = curWords.concat(line.Words.slice(i));
+      } else {
+        curWords = curWords.concat(line.Words);
       }
     }
+    this.normalizeWordCoords(curWords, screenFactor);
+    this.addToCharacterLines(curName, curWords);
+    
     cropY.push({top, bot: imHeight*screenFactor});
-    console.log('crop list done');
 
-    console.log(cropY);
-    console.log(capture.height);
-    // TODO: convert cropY to screen coordinates
-
-    /*
-    let croppedImages = [];
-    for (let crop of cropY) {
-      const croppedImage = await ImageManipulator.manipulateAsync(
-        capture.uri,
-        [{ rotate: orientation },
-        { crop: { originX: 0, originY: crop.top, width: imWidth, height: crop.bot - crop.top } }]
-      );
-      croppedImages.push(croppedImage);
-    }
-
-    this.setState({ croppedLines: 
-      [...this.state.croppedLines, {
-        origImage: capture,
-        croppedImages
-      }]
-    });
-    */
     this.setState({ 
       croppedLines: [...this.state.croppedLines, cropY]
     });
-
-    console.log('CROPPED LINES DONE');
-    //console.log(this.state.croppedLines);
   }
 
   nextLine = () => {
@@ -187,44 +215,18 @@ export default class UploadPage extends React.Component {
 
   render() {
     const captures = this.props.navigation.getParam('captures', []);
-    const { croppedLines, curLine } = this.state;
+    const { croppedLines, curLine, curCharacters, linesByCharacter } = this.state;
     const curCropList = croppedLines[0];
 
     return (
       <React.Fragment>
         <StatusBar hidden={true} />
         <View>
-          {/*
-            croppedLines.map((curPage) => {
-              return curPage.croppedImages.map((image) => {
-                console.log(image);
-                return (
-                  <Image 
-                    key={image.uri}
-                    source={{ uri: image.uri }}
-                    style={{ width: winHeight, height: image.height * winHeight/image.width, marginBottom: 15}}
-                  />
-                );
-              })
-            })*/
-          }
-
-          {
-            /*croppedLines.length > 0 && 
-            <Image 
-              source={{uri: croppedLines[0].croppedImages[0].uri}}
-              style={{ width: 1000, height: 300}}
-            />
-            */
-          }
-
-          
-
           { croppedLines.length > 0 && 
           <View>
             <Image 
               source={{uri: captures[0].uri}}
-              style={ // TODO: use `top` w/ negative numbers to center the correct line  
+              style={ 
                     {  width: winHeight, 
                         height: captures[0].height * winHeight/captures[0].width,
                         position: 'absolute',  
@@ -255,6 +257,38 @@ export default class UploadPage extends React.Component {
             >
               <TouchableOpacity onPress={this.nextLine} style={{flex: 1}} />
             </LinearGradient>
+
+            { // TODO: make this depend on curLine
+              curCharacters.map((name, i) => {
+                if (name in linesByCharacter) {
+                  return linesByCharacter[name].map((wordBox, j) => (
+                    <View 
+                      key={i + '_' + j}
+                      style={{
+                        backgroundColor: 'black',
+                        position: 'absolute',
+                        width: wordBox.Width,
+                        height: wordBox.Height,
+                        top: winWidth/2 - (curCropList[curLine].bot-curCropList[curLine].top)/2 - curCropList[curLine].top + wordBox.Top,
+                        left: wordBox.Left
+                      }}
+                    />
+                  ));
+                }
+                return null;
+              })
+              
+            }
+            <View 
+              style={{
+                backgroundColor: 'black',
+                position: 'absolute',
+                width: 20,
+                height: 20,
+                top: 10,
+                left: 10
+              }}
+            />
           </View>
           }
         </View>
