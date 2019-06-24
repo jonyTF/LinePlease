@@ -104,22 +104,48 @@ export default class UploadPage extends React.Component {
     return textOverlay;
   };
 
-  addToCharacterLines = (curName, curWords) => {
+  addToCharacterLines = (curName, curWords, screenFactor) => {
+    let rects = [];
+    for (let line of curWords) {
+      let minTop = line[0].Top;
+      let minLeft = line[0].Left;
+      let maxLeftWidth = line[0].Left + line[0].Width;
+      let maxTopHeight = line[0].Top + line[0].Height;
+      for (let i = 1; i < line.length; i++) {
+        if (line[i].Top < minTop) {
+          minTop = line[i].Top;
+        }
+        if (line[i].Left < minLeft) {
+          minLeft = line[i].Left;
+        }
+        if (line[i].Left + line[i].Width > maxLeftWidth) {
+          maxLeftWidth = line[i].Left + line[i].Width;
+        }
+        if (line[i].Top + line[i].Height > maxTopHeight) {
+          maxTopHeight = line[i].Top + line[i].Height
+        }
+      }
+
+      // Normalizes ocr space coords to window coords
+      minTop *= screenFactor;
+      minLeft *= screenFactor;
+      maxLeftWidth *= screenFactor;
+      maxTopHeight *= screenFactor;
+
+      let rect = {
+        top: minTop,
+        left: minLeft,
+        width: maxLeftWidth - minLeft,
+        height: maxTopHeight - minTop,
+      };
+      rects.push(rect);
+    }
+
     console.log(curName);
     if (curName in this.state.linesByCharacter) {
-      this.state.linesByCharacter[curName] = this.state.linesByCharacter[curName].concat(curWords);
+      this.state.linesByCharacter[curName] = this.state.linesByCharacter[curName].concat(rects);
     } else { 
-      this.state.linesByCharacter[curName] = curWords;
-    }
-  };
-
-  normalizeWordCoords = (words, screenFactor) => {
-    // Normalizes ocr space coords to window coords
-    for (let i = 0; i < words.length; i++) {
-      words[i].Height *= screenFactor;
-      words[i].Width *= screenFactor;
-      words[i].Left *= screenFactor;
-      words[i].Top *= screenFactor;
+      this.state.linesByCharacter[curName] = rects;
     }
   };
 
@@ -165,8 +191,8 @@ export default class UploadPage extends React.Component {
       if (this.isName(firstWord)) {
         // If the current line has a name in it
         if (curName.length > 0) {
-          this.normalizeWordCoords(curWords, screenFactor);
-          this.addToCharacterLines(curName, curWords);
+          if (curWords.length > 0)
+            this.addToCharacterLines(curName, curWords, screenFactor);
           curName = '';
           curWords = [];
         }
@@ -185,13 +211,16 @@ export default class UploadPage extends React.Component {
             break;
         }
 
-        curWords = curWords.concat(line.Words.slice(i));
+        let words = line.Words.slice(i);
+        if (words.length > 0)
+          curWords.push(words);
       } else {
-        curWords = curWords.concat(line.Words);
+        let words = line.Words;
+        if (words.length > 0)
+          curWords.push(words);
       }
     }
-    this.normalizeWordCoords(curWords, screenFactor);
-    this.addToCharacterLines(curName, curWords);
+    this.addToCharacterLines(curName, curWords, screenFactor);
     
     cropY.push({top, bot: imHeight*screenFactor});
 
@@ -258,19 +287,19 @@ export default class UploadPage extends React.Component {
               <TouchableOpacity onPress={this.nextLine} style={{flex: 1}} />
             </LinearGradient>
 
-            { // TODO: make this depend on curLine
+            {
               curCharacters.map((name, i) => {
                 if (name in linesByCharacter) {
-                  return linesByCharacter[name].map((wordBox, j) => (
+                  return linesByCharacter[name].map((rect, j) => (
                     <View 
                       key={i + '_' + j}
                       style={{
                         backgroundColor: 'black',
                         position: 'absolute',
-                        width: wordBox.Width,
-                        height: wordBox.Height,
-                        top: winWidth/2 - (curCropList[curLine].bot-curCropList[curLine].top)/2 - curCropList[curLine].top + wordBox.Top,
-                        left: wordBox.Left
+                        width: rect.width,
+                        height: rect.height,
+                        top: winWidth/2 - (curCropList[curLine].bot-curCropList[curLine].top)/2 - curCropList[curLine].top + rect.top,
+                        left: rect.left
                       }}
                     />
                   ));
@@ -279,16 +308,6 @@ export default class UploadPage extends React.Component {
               })
               
             }
-            <View 
-              style={{
-                backgroundColor: 'black',
-                position: 'absolute',
-                width: 20,
-                height: 20,
-                top: 10,
-                left: 10
-              }}
-            />
           </View>
           }
         </View>
