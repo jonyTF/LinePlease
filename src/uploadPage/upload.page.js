@@ -4,6 +4,9 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import Config from 'react-native-config';
 import * as FileSystem from 'expo-file-system';
 import { ScreenOrientation } from 'expo';
+import { NavigationEvents } from 'react-navigation';
+
+import Gallery from './gallery.component';
 
 import styles from '../styles';
 import data from './testdata';
@@ -13,15 +16,15 @@ import data from './testdata';
 
 export default class UploadPage extends React.Component {
   state = {
-    ocrInfo: [],
+    ocrDataList: [],
     captures: [],
   };
 
   componentDidMount() {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-    this.setState({ captures: this.props.navigation.getParam('captures', []) });
-    if (this.state.captures.length > 0)
-      this.getOCRInfo();
+    const captures = this.props.navigation.getParam('captures', []);
+    if (captures.length > 0)
+      this.getOCRData();
   };
 
   resizeImage = async (capture) => {
@@ -102,18 +105,35 @@ export default class UploadPage extends React.Component {
     return textOverlay;
   };
 
-  getOCRInfo = async () => {
-    for (let capture of this.state.captures) {
-      const textOverlay = await getImageText(capture);
-      this.state.ocrInfo.push(textOverlay);
+  getOCRData = async () => {
+    const captures = this.props.navigation.getParam('captures', []);
+    for (let capture of captures) {
+      //const ocrData = await this.getImageText(capture);
+      const ocrData = {overlay: data, orientation: 0};
+      this.setState({ ocrDataList: [...this.state.ocrDataList, ocrData]});
     }
+    console.log(this.state.ocrDataList);
+  };
+
+  showLines = (index) => {
+    const { ocrDataList } = this.state;
+    const captures = this.props.navigation.getParam('captures', []);
+    this.props.navigation.navigate('ShowLines', { capture: captures[index], ocrData: ocrDataList[index] });
   };
 
   render() {
+    const { ocrDataList } = this.state;
+    const captures = this.props.navigation.getParam('captures', []);
+
     return (
       <React.Fragment>
         <StatusBar hidden={false} />
-        <Text>hello there!</Text>
+        <NavigationEvents 
+          onWillFocus={() => ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP)}
+          onDidBlur={null}
+        />
+
+        <Gallery captures={captures} ocrDataList={ocrDataList} showLines={this.showLines} />
       </React.Fragment>
     );
   };

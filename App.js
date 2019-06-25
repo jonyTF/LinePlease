@@ -3,6 +3,7 @@ import { createStackNavigator, createAppContainer } from 'react-navigation';
 import CameraPage from './src/cameraPage/camera.page';
 import UploadPage from './src/uploadPage/upload.page';
 import InputScriptPage from './src/inputScriptPage/inputScript.page';
+import ShowLinesPage from './src/showLinesPage/showLines.page';
 
 const AppNavigator = createStackNavigator(
   {
@@ -14,11 +15,14 @@ const AppNavigator = createStackNavigator(
     },
     Upload: {
       screen: UploadPage,
-      navigationOptions: {
-        header: null
-      },
     },
     InputScript: InputScriptPage,
+    ShowLines: {
+      screen: ShowLinesPage,
+      navigationOptions: {
+        header: null,
+      },
+    }
   },
   {
     initialRouteName: 'InputScript',

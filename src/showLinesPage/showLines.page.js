@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Image, TouchableOpacity, TouchableNativeFeedback, Dimensions, StatusBar, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenOrientation } from 'expo';
 
@@ -10,10 +10,12 @@ export default class ShowLinesPage extends React.Component {
     curLine: 0,
     curCharacters: ['FJ:', 'F):', 'F]:'],
     linesByCharacter: {},
+    croppedLines: [],
   };
 
   componentDidMount() {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_LEFT);
+    this.cropLines(this.props.navigation.getParam('capture', []), this.props.navigation.getParam('ocrData', []));
   };
 
   addToCharacterLines = (curName, curWords, screenFactor) => {
@@ -65,15 +67,14 @@ export default class ShowLinesPage extends React.Component {
     return text.length >= 2 && text === text.toUpperCase();
   };
 
-  cropLines = async (capture) => {
+  cropLines = async (capture, ocrData) => {
     console.log('GET OCR DATA');
     //const ocrData = await this.getImageText(capture);
 
     console.log('CROPPED LINES START');
-    //const textOverlay = ocrData.overlay;
-    //const orientation = parseInt(ocrData.orientation);
-    const textOverlay = data;
-    const orientation = 0;
+    console.log(ocrData);
+    const textOverlay = ocrData.overlay;
+    const orientation = parseInt(ocrData.orientation);
     console.log(textOverlay);
     
     if ('error' in textOverlay) {
@@ -137,14 +138,13 @@ export default class ShowLinesPage extends React.Component {
     cropY.push({top, bot: imHeight*screenFactor});
 
     this.setState({ 
-      croppedLines: [...this.state.croppedLines, cropY]
+      croppedLines: cropY
     });
   }
 
   nextLine = () => {
     const { croppedLines, curLine } = this.state;
-    const curCropList = croppedLines[0];
-    if (curLine + 1 < curCropList.length) 
+    if (curLine + 1 < croppedLines.length) 
       this.setState({ curLine: curLine + 1 });
   };
 
@@ -155,8 +155,13 @@ export default class ShowLinesPage extends React.Component {
   };
 
   render() {
+    const TouchablePlatformSpecific = Platform.OS === 'ios' ? 
+        TouchableOpacity : 
+        TouchableNativeFeedback;
+
+    const capture = this.props.navigation.getParam('capture', []);
     const { croppedLines, curLine, curCharacters, linesByCharacter } = this.state;
-    const curCropList = croppedLines[0];
+
 
     return (
       <React.Fragment>
@@ -164,12 +169,12 @@ export default class ShowLinesPage extends React.Component {
         { croppedLines.length > 0 && 
           <View>
             <Image 
-              source={{uri: captures[0].uri}}
+              source={{uri: capture.uri}}
               style={ 
                     {  width: winHeight, 
-                        height: captures[0].height * winHeight/captures[0].width,
+                        height: capture.height * winHeight/capture.width,
                         position: 'absolute',  
-                        top: winWidth/2 - (curCropList[curLine].bot-curCropList[curLine].top)/2 - curCropList[curLine].top,
+                        top: winWidth/2 - (croppedLines[curLine].bot-croppedLines[curLine].top)/2 - croppedLines[curLine].top,
                     }}
             />
             <LinearGradient
@@ -179,22 +184,22 @@ export default class ShowLinesPage extends React.Component {
                 left: 0,
                 top: 0,
                 width: winHeight,
-                height: (winWidth - (curCropList[curLine].bot-curCropList[curLine].top)) / 2,
+                height: (winWidth - (croppedLines[curLine].bot-croppedLines[curLine].top)) / 2,
               }}
             >
-              <TouchableOpacity onPress={this.prevLine} style={{flex: 1}} />
+              <TouchablePlatformSpecific onPress={this.prevLine} style={{flex: 1}} />
             </LinearGradient>
             <LinearGradient
               colors={['rgba(0, 0, 0, 0.5)', 'rgba(0, 0, 0, 0.9)']}
               style={{
                 position: 'absolute',
                 left: 0,
-                top: (winWidth - (curCropList[curLine].bot-curCropList[curLine].top)) / 2 + (curCropList[curLine].bot-curCropList[curLine].top),
+                top: (winWidth - (croppedLines[curLine].bot-croppedLines[curLine].top)) / 2 + (croppedLines[curLine].bot-croppedLines[curLine].top),
                 width: winHeight,
-                height: (winWidth - (curCropList[curLine].bot-curCropList[curLine].top)) / 2,
+                height: (winWidth - (croppedLines[curLine].bot-croppedLines[curLine].top)) / 2,
               }}
             >
-              <TouchableOpacity onPress={this.nextLine} style={{flex: 1}} />
+              <TouchablePlatformSpecific onPress={this.nextLine} style={{flex: 1}} />
             </LinearGradient>
 
             {
@@ -208,7 +213,7 @@ export default class ShowLinesPage extends React.Component {
                         position: 'absolute',
                         width: rect.width,
                         height: rect.height,
-                        top: winWidth/2 - (curCropList[curLine].bot-curCropList[curLine].top)/2 - curCropList[curLine].top + rect.top,
+                        top: winWidth/2 - (croppedLines[curLine].bot-croppedLines[curLine].top)/2 - croppedLines[curLine].top + rect.top,
                         left: rect.left
                       }}
                     />
