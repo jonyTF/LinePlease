@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, Image, TouchableOpacity, TouchableNativeFeedback, Dimensions, StatusBar, Platform } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Dimensions, StatusBar } from 'react-native';
 import { ScreenOrientation } from 'expo';
 
+import Main from './main.component';
+
 const { width: winWidth, height: winHeight } = Dimensions.get('window');
+
 
 export default class ShowLinesPage extends React.Component {
   state = {
@@ -155,75 +157,22 @@ export default class ShowLinesPage extends React.Component {
   };
 
   render() {
-    const TouchablePlatformSpecific = Platform.OS === 'ios' ? 
-        TouchableOpacity : 
-        TouchableNativeFeedback;
-
     const capture = this.props.navigation.getParam('capture', []);
     const { croppedLines, curLine, curCharacters, linesByCharacter } = this.state;
-
 
     return (
       <React.Fragment>
         <StatusBar hidden={true} />
         { croppedLines.length > 0 && 
-          <View>
-            <Image 
-              source={{uri: capture.uri}}
-              style={ 
-                    {  width: winHeight, 
-                        height: capture.height * winHeight/capture.width,
-                        position: 'absolute',  
-                        top: winWidth/2 - (croppedLines[curLine].bot-croppedLines[curLine].top)/2 - croppedLines[curLine].top,
-                    }}
-            />
-            <LinearGradient
-              colors={['rgba(0, 0, 0, 0.9)', 'rgba(0, 0, 0, 0.5)']}
-              style={{
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                width: winHeight,
-                height: (winWidth - (croppedLines[curLine].bot-croppedLines[curLine].top)) / 2,
-              }}
-            >
-              <TouchablePlatformSpecific onPress={this.prevLine} style={{flex: 1}} />
-            </LinearGradient>
-            <LinearGradient
-              colors={['rgba(0, 0, 0, 0.5)', 'rgba(0, 0, 0, 0.9)']}
-              style={{
-                position: 'absolute',
-                left: 0,
-                top: (winWidth - (croppedLines[curLine].bot-croppedLines[curLine].top)) / 2 + (croppedLines[curLine].bot-croppedLines[curLine].top),
-                width: winHeight,
-                height: (winWidth - (croppedLines[curLine].bot-croppedLines[curLine].top)) / 2,
-              }}
-            >
-              <TouchablePlatformSpecific onPress={this.nextLine} style={{flex: 1}} />
-            </LinearGradient>
-
-            {
-              curCharacters.map((name, i) => {
-                if (name in linesByCharacter) {
-                  return linesByCharacter[name].map((rect, j) => (
-                    <View 
-                      key={i + '_' + j}
-                      style={{
-                        backgroundColor: 'black',
-                        position: 'absolute',
-                        width: rect.width,
-                        height: rect.height,
-                        top: winWidth/2 - (croppedLines[curLine].bot-croppedLines[curLine].top)/2 - croppedLines[curLine].top + rect.top,
-                        left: rect.left
-                      }}
-                    />
-                  ));
-                }
-                return null;
-              })
-              
-            }
-          </View>
+          <Main 
+            capture={capture}
+            curCharacters={curCharacters}
+            linesByCharacter={linesByCharacter}
+            cropTop={croppedLines[curLine].top}
+            cropBot={croppedLines[curLine].bot}
+            nextLine={this.nextLine}
+            prevLine={this.prevLine}
+          />
         }
       </React.Fragment>
     );

@@ -1,10 +1,11 @@
 import React from 'react';
-import { Text, View, Image, StatusBar } from 'react-native';
+import { StatusBar, TextInput } from 'react-native';
 import * as ImageManipulator from 'expo-image-manipulator';
 import Config from 'react-native-config';
 import * as FileSystem from 'expo-file-system';
 import { ScreenOrientation } from 'expo';
 import { NavigationEvents } from 'react-navigation';
+import { Divider } from 'react-native-elements';
 
 import Gallery from './gallery.component';
 
@@ -18,6 +19,7 @@ export default class UploadPage extends React.Component {
   state = {
     ocrDataList: [],
     captures: [],
+    title: 'New Script',
   };
 
   componentDidMount() {
@@ -112,7 +114,6 @@ export default class UploadPage extends React.Component {
       const ocrData = {overlay: data, orientation: 0};
       this.setState({ ocrDataList: [...this.state.ocrDataList, ocrData]});
     }
-    console.log(this.state.ocrDataList);
   };
 
   showLines = (index) => {
@@ -122,7 +123,7 @@ export default class UploadPage extends React.Component {
   };
 
   render() {
-    const { ocrDataList } = this.state;
+    const { ocrDataList, title } = this.state;
     const captures = this.props.navigation.getParam('captures', []);
 
     return (
@@ -132,6 +133,32 @@ export default class UploadPage extends React.Component {
           onWillFocus={() => ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP)}
           onDidBlur={null}
         />
+        
+        <TextInput 
+          onChangeText={text => this.setState({ title: text })}
+          value={title}
+          multiline={true}
+          style={{
+            borderBottomColor: 'black',
+            borderBottomWidth: 2,
+            alignSelf: 'center',
+            fontSize: 50,
+            marginTop: 10,
+            marginBottom: 10,
+            marginLeft: 10,
+            marginRight: 10,
+          }}
+        />
+        { false &&
+        <Divider 
+          style={{
+            marginBottom: 20,
+            height: 1,
+            marginRight: 10,
+            marginLeft: 10,
+          }}
+        />
+        }
 
         <Gallery captures={captures} ocrDataList={ocrDataList} showLines={this.showLines} />
       </React.Fragment>
