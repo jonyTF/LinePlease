@@ -1,8 +1,9 @@
 import React from 'react';
-import { Dimensions, StatusBar } from 'react-native';
+import { Dimensions, StatusBar, Animated } from 'react-native';
 import { ScreenOrientation } from 'expo';
 
 import Main from './main.component';
+import data from '../uploadPage/testdata';
 
 const { width: winWidth, height: winHeight } = Dimensions.get('window');
 
@@ -13,11 +14,23 @@ export default class ShowLinesPage extends React.Component {
     curCharacters: ['FJ:', 'F):', 'F]:'],
     linesByCharacter: {},
     croppedLines: [],
+    cropTop: new Animated.Value(0),
+    cropBot: new Animated.Value(0),
   };
 
   componentDidMount() {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_LEFT);
-    this.cropLines(this.props.navigation.getParam('capture', []), this.props.navigation.getParam('ocrData', []));
+    //const capture = this.props.navigation.getParam('capture', []);
+    const capture = {
+      "cancelled": false,
+      "height": 4048,
+      "type": "image",
+      "uri": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252FLinePlease-94cdde7e-05b2-4193-bef6-6fa95eedda87/ImagePicker/495c495c-9e24-4645-bcaa-535975d96dcb.jpg",
+      "width": 3036,
+    };
+    //const ocrData = this.props.navigation.getParam('ocrData', []);
+    const ocrData = {overlay: data, orientation: 0};
+    this.cropLines(capture, ocrData);
   };
 
   addToCharacterLines = (curName, curWords, screenFactor) => {
@@ -70,14 +83,14 @@ export default class ShowLinesPage extends React.Component {
   };
 
   cropLines = async (capture, ocrData) => {
+    console.log(capture);
     console.log('GET OCR DATA');
     //const ocrData = await this.getImageText(capture);
 
     console.log('CROPPED LINES START');
-    console.log(ocrData);
     const textOverlay = ocrData.overlay;
     const orientation = parseInt(ocrData.orientation);
-    console.log(textOverlay);
+    //console.log(textOverlay);
     
     if ('error' in textOverlay) {
       console.log('ERROR');
@@ -139,26 +152,57 @@ export default class ShowLinesPage extends React.Component {
     
     cropY.push({top, bot: imHeight*screenFactor});
 
+    this.state.cropTop.setValue(cropY[0].top);
+    this.state.cropBot.setValue(cropY[0].bot);
+
     this.setState({ 
       croppedLines: cropY
     });
   }
 
+  animateToLine = (lineNum) => {
+    Animated.parallel([
+      Animated.spring(
+        this.state.cropTop,
+        {
+          toValue: this.state.croppedLines[lineNum].top,
+        }
+      ),
+      Animated.spring(
+        this.state.cropBot,
+        {
+          toValue: this.state.croppedLines[lineNum].bot,
+        }
+      )
+    ]).start();
+  }
+
   nextLine = () => {
     const { croppedLines, curLine } = this.state;
-    if (curLine + 1 < croppedLines.length) 
+    if (curLine + 1 < croppedLines.length) {
       this.setState({ curLine: curLine + 1 });
+      this.animateToLine(curLine + 1);
+    }
   };
 
   prevLine = () => {
     const { curLine } = this.state;
-    if (curLine - 1 >= 0) 
+    if (curLine - 1 >= 0) {
       this.setState({ curLine: curLine - 1 });
+      this.animateToLine(curLine - 1);
+    }
   };
 
   render() {
-    const capture = this.props.navigation.getParam('capture', []);
-    const { croppedLines, curLine, curCharacters, linesByCharacter } = this.state;
+    //const capture = this.props.navigation.getParam('capture', []);
+    const capture = {
+      "cancelled": false,
+      "height": 4048,
+      "type": "image",
+      "uri": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252FLinePlease-94cdde7e-05b2-4193-bef6-6fa95eedda87/ImagePicker/495c495c-9e24-4645-bcaa-535975d96dcb.jpg",
+      "width": 3036,
+    }; 
+    const { croppedLines, curLine, curCharacters, linesByCharacter, cropTop, cropBot } = this.state;
 
     return (
       <React.Fragment>
@@ -168,8 +212,8 @@ export default class ShowLinesPage extends React.Component {
             capture={capture}
             curCharacters={curCharacters}
             linesByCharacter={linesByCharacter}
-            cropTop={croppedLines[curLine].top}
-            cropBot={croppedLines[curLine].bot}
+            cropTop={cropTop}
+            cropBot={cropBot}
             nextLine={this.nextLine}
             prevLine={this.prevLine}
           />
