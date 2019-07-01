@@ -12,11 +12,9 @@ export default({
   //  winWidth/2 - (cropBot-cropTop)/2 - cropTop
   const imTop = Animated.subtract(Animated.subtract(winWidth/2, Animated.divide(Animated.subtract(cropBot, cropTop), 2)), cropTop);
   // (winWidth - (cropBot._value-cropTop._value)) / 2
-  const boxTopHeight = Animated.divide(Animated.subtract(winWidth, Animated.subtract(cropBot, cropTop)), 2);
+  const boxHeight = Animated.divide(Animated.subtract(winWidth, Animated.subtract(cropBot, cropTop)), 2);
   // (winWidth - (cropBot._value-cropTop._value)) / 2 + (cropBot._value-cropTop._value)
-  const cropBotTop = Animated.add(Animated.divide(Animated.subtract(winWidth, Animated.subtract(cropBot, cropTop)), 2), Animated.subtract(cropBot, cropTop));
-  //(winWidth - (cropBot._value-cropTop._value)) / 2
-  const cropBotHeight = Animated.divide(Animated.subtract(winWidth, Animated.subtract(cropBot, cropTop)), 2);
+  const boxBotTop = Animated.add(boxHeight, Animated.subtract(cropBot, cropTop));
   
   return (
     <View>
@@ -37,7 +35,7 @@ export default({
           left: 0,
           top: 0,
           width: winHeight,
-          height: boxTopHeight,
+          height: boxHeight,
         }}
       >
         <LinearGradient
@@ -54,9 +52,9 @@ export default({
         style={{
           position: 'absolute',
           left: 0,
-          top: cropBotTop,
+          top: boxBotTop,
           width: winHeight,
-          height: cropBotHeight,
+          height: boxHeight,
         }}
       >
         <LinearGradient
