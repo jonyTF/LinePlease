@@ -6,7 +6,7 @@ const { width: winWidth, height: winHeight } = Dimensions.get('window');
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 export default({ 
-  capture, curCharacters, linesByCharacter, cropTop, cropBot,
+  capture, curCharacters, linesByCharacter, cropTop, cropBot, imageX,
   nextLine, prevLine
 }) => {
   //  winWidth/2 - (cropBot-cropTop)/2 - cropTop
@@ -24,7 +24,8 @@ export default({
           width: winHeight, 
           height: capture.height * winHeight/capture.width,
           position: 'absolute',  
-          top: imTop,     
+          top: imTop,   
+          left: imageX,  
         }}
       />
       <AnimatedTouchableOpacity 

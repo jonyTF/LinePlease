@@ -107,12 +107,16 @@ export default class UploadPage extends React.Component {
     return textOverlay;
   };
 
-  getOCRData = async () => {
+  addToOCRDataList = async (capture) => {
+    //const ocrData = await this.getImageText(capture);
+    const ocrData = {overlay: data, orientation: 0};
+    this.setState({ ocrDataList: [...this.state.ocrDataList, ocrData]});
+  };
+
+  getOCRData = () => {
     const captures = this.props.navigation.getParam('captures', []);
     for (let capture of captures) {
-      //const ocrData = await this.getImageText(capture);
-      const ocrData = {overlay: data, orientation: 0};
-      this.setState({ ocrDataList: [...this.state.ocrDataList, ocrData]});
+      this.addToOCRDataList(capture);
     }
   };
 

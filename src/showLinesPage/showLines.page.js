@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dimensions, StatusBar, Animated } from 'react-native';
+import { Dimensions, StatusBar, Animated, PanResponder, View } from 'react-native';
 import { ScreenOrientation } from 'expo';
 
 import Main from './main.component';
@@ -16,7 +16,30 @@ export default class ShowLinesPage extends React.Component {
     croppedLines: [],
     cropTop: new Animated.Value(0),
     cropBot: new Animated.Value(0),
+    imageXOld: 0,
+    imageX: 0,
   };
+
+  panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (evt, gestureState) => {
+      const { dx, dy } = gestureState;
+      return dx > 2 || dx < -2 || dy > 2 || dy < -2;
+    },
+    onPanResponderGrant: (evt, gestureState) => {
+      this.setState({ imageXOld: this.state.imageX });
+    },
+    onPanResponderMove: (evt, gestureState) => {
+      const { dx } = gestureState;
+      this.setState({ imageX: this.state.imageXOld + dx });
+    },
+    onPanResponderTerminationRequest: (evt, gestureState) => true,
+    onPanResponderRelease: (evt, gestureState) => {
+
+    },
+    onPanResponderTerminate: (evt, gestureState) => {
+
+    },
+  });
 
   componentDidMount() {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_LEFT);
@@ -202,21 +225,24 @@ export default class ShowLinesPage extends React.Component {
       "uri": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252FLinePlease-94cdde7e-05b2-4193-bef6-6fa95eedda87/ImagePicker/495c495c-9e24-4645-bcaa-535975d96dcb.jpg",
       "width": 3036,
     }; 
-    const { croppedLines, curLine, curCharacters, linesByCharacter, cropTop, cropBot } = this.state;
+    const { croppedLines, curLine, curCharacters, linesByCharacter, cropTop, cropBot, imageX } = this.state;
 
     return (
       <React.Fragment>
         <StatusBar hidden={true} />
         { croppedLines.length > 0 && 
-          <Main 
-            capture={capture}
-            curCharacters={curCharacters}
-            linesByCharacter={linesByCharacter}
-            cropTop={cropTop}
-            cropBot={cropBot}
-            nextLine={this.nextLine}
-            prevLine={this.prevLine}
-          />
+          <View {...this.panResponder.panHandlers}>
+            <Main 
+              capture={capture}
+              curCharacters={curCharacters}
+              linesByCharacter={linesByCharacter}
+              cropTop={cropTop}
+              cropBot={cropBot}
+              nextLine={this.nextLine}
+              prevLine={this.prevLine}
+              imageX={imageX}
+            />
+          </View>
         }
       </React.Fragment>
     );
