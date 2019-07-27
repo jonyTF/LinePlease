@@ -15,8 +15,9 @@ export default class InputScriptPage extends React.Component {
   };
 
   takePictures = async () => {
-    const image = await ImagePicker.launchCameraAsync();
-    this.props.navigation.navigate('Upload', { captures: [image] });
+    this.props.navigation.navigate('Camera');
+    //const image = await ImagePicker.launchCameraAsync();
+    //this.props.navigation.navigate('Upload', { captures: [image] });
   };
   
   importPictures = async () => {
@@ -41,6 +42,7 @@ export default class InputScriptPage extends React.Component {
         <Button
           title="Take pictures of script"
           style={styles.btn}
+          onPress={this.takePictures}
         />
         <Button 
           title="Import pictures of script"

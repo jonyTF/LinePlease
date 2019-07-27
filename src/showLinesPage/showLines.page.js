@@ -1,6 +1,7 @@
 import React from 'react';
-import { Dimensions, StatusBar, Animated, PanResponder, View } from 'react-native';
+import { Dimensions, StatusBar, Animated, PanResponder, View, TouchableOpacity, Easing } from 'react-native';
 import { ScreenOrientation } from 'expo';
+import { Icon } from 'react-native-elements';
 
 import Main from './main.component';
 import data from '../uploadPage/testdata';
@@ -185,16 +186,18 @@ export default class ShowLinesPage extends React.Component {
 
   animateToLine = (lineNum) => {
     Animated.parallel([
-      Animated.spring(
+      Animated.timing(
         this.state.cropTop,
         {
           toValue: this.state.croppedLines[lineNum].top,
+          duration: 250,
         }
       ),
-      Animated.spring(
+      Animated.timing(
         this.state.cropBot,
         {
           toValue: this.state.croppedLines[lineNum].bot,
+          duration: 250,
         }
       )
     ]).start();
@@ -230,6 +233,7 @@ export default class ShowLinesPage extends React.Component {
     return (
       <React.Fragment>
         <StatusBar hidden={true} />
+
         { croppedLines.length > 0 && 
           <View {...this.panResponder.panHandlers}>
             <Main 
@@ -244,6 +248,16 @@ export default class ShowLinesPage extends React.Component {
             />
           </View>
         }
+
+        <Icon
+          name="settings"
+          type="material"
+          reverse={true}
+          color="#1F85DE"
+          containerStyle={{ position: 'absolute', left: 15, bottom: 15 }}
+          onPress={() => console.log('press\'d')}
+          Component={TouchableOpacity}
+        />
       </React.Fragment>
     );
   };

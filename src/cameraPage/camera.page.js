@@ -134,7 +134,7 @@ export default class CameraPage extends React.Component {
           />
           :
           <React.Fragment>
-            <TouchableOpacity style={styles.leftTopBtn} onPress={null}>
+            <TouchableOpacity style={styles.leftTopBtn} onPress={() => this.props.navigation.goBack()}>
               <Text style={styles.btnText}>Cancel</Text>
             </TouchableOpacity>
             

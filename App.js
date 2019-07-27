@@ -25,7 +25,7 @@ const AppNavigator = createStackNavigator(
     }
   },
   {
-    initialRouteName: 'ShowLines',
+    initialRouteName: 'Upload',
   },
 );
 

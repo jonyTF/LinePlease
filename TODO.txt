@@ -1,0 +1,20 @@
+- Taskbar that appears on the side while you are looking at lines
+    - maybe make this like an action button sort of thing?
+    - includes:
+        - settings button 
+            - configure which character is yours?
+            - maybe have this on the upload image page as a popup?
+- general settings button
+    - configure left/right handed mode
+- have a back button on the top left to return to script screen
+- have buttons to advance/go back pages
+- Character menu that allows you to select which character you're playing
+    - be able to drag characters around to merge them together (if it misdetected a character's name)
+    - be able to rename characters (if misdetected what it actually is)
+- be able to save scripts
+- be able to rearrange script pages
+- be able to zoom in on script images / display them bigger on the selection screen. 
+- allow multiple image selection
+
+- After you tap on an image, it opens it in full screen
+- then there will be a button to start showing lines

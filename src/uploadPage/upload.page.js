@@ -16,15 +16,23 @@ import data from './testdata';
 // TODO: Add selection box that allows you to choose which character to black lines out for
 
 export default class UploadPage extends React.Component {
+  test = {
+    "cancelled": false,
+    "height": 4048,
+    "type": "image",
+    "uri": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252FLinePlease-94cdde7e-05b2-4193-bef6-6fa95eedda87/ImagePicker/495c495c-9e24-4645-bcaa-535975d96dcb.jpg",
+    "width": 3036,
+  }; 
+
   state = {
     ocrDataList: [],
-    captures: [],
+    captures: [this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test], //this.props.navigation.getParam('captures', []),
     title: 'New Script',
   };
 
   componentDidMount() {
+    const { captures } = this.state;
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-    const captures = this.props.navigation.getParam('captures', []);
     if (captures.length > 0)
       this.getOCRData();
   };
@@ -114,21 +122,19 @@ export default class UploadPage extends React.Component {
   };
 
   getOCRData = () => {
-    const captures = this.props.navigation.getParam('captures', []);
+    const { captures } = this.state;
     for (let capture of captures) {
       this.addToOCRDataList(capture);
     }
   };
 
   showLines = (index) => {
-    const { ocrDataList } = this.state;
-    const captures = this.props.navigation.getParam('captures', []);
+    const { ocrDataList, captures } = this.state;
     this.props.navigation.navigate('ShowLines', { capture: captures[index], ocrData: ocrDataList[index] });
   };
 
   render() {
-    const { ocrDataList, title } = this.state;
-    const captures = this.props.navigation.getParam('captures', []);
+    const { ocrDataList, title, captures } = this.state;
 
     return (
       <React.Fragment>
