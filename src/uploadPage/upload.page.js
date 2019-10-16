@@ -10,7 +10,7 @@ import { Divider } from 'react-native-elements';
 import Gallery from './gallery.component';
 
 import styles from '../styles';
-import data from './testdata';
+import testdata from './testdata';
 
 // TODO: Add zooming and horizontal panning
 // TODO: Add selection box that allows you to choose which character to black lines out for
@@ -20,20 +20,27 @@ export default class UploadPage extends React.Component {
     "cancelled": false,
     "height": 4048,
     "type": "image",
-    "uri": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252FLinePlease-94cdde7e-05b2-4193-bef6-6fa95eedda87/ImagePicker/495c495c-9e24-4645-bcaa-535975d96dcb.jpg",
+    "uri": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252FLinePlease-94cdde7e-05b2-4193-bef6-6fa95eedda87/ImagePicker/3ac8b9cf-0d07-43b2-a5f6-d5b2a9da371f.jpg",
     "width": 3036,
   }; 
 
+  captures = [this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test];
+
+  getData = (captures) => {
+    return captures.map(capture => {
+      return {capture: capture, ocrData: null};
+    });
+  };
+
   state = {
-    ocrDataList: [],
-    captures: [this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test], //this.props.navigation.getParam('captures', []),
+    data: this.getData(this.captures), //this.getData(this.props.navigation.getParam('captures', [])),
     title: 'New Script',
   };
 
   componentDidMount() {
-    const { captures } = this.state;
+    const { data } = this.state;
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-    if (captures.length > 0)
+    if (data.length > 0)
       this.getOCRData();
   };
 
@@ -115,26 +122,32 @@ export default class UploadPage extends React.Component {
     return textOverlay;
   };
 
-  addToOCRDataList = async (capture) => {
+  addToOCRDataList = async (item) => {
     //const ocrData = await this.getImageText(capture);
-    const ocrData = {overlay: data, orientation: 0};
-    this.setState({ ocrDataList: [...this.state.ocrDataList, ocrData]});
+    setTimeout(() => {
+      const ocrData = {overlay: testdata, orientation: 0};
+      item.ocrData = ocrData;
+      console.log('done');
+      this.setState({ ocrDataList: this.state.ocrDataList });
+    }, 5000);
   };
 
   getOCRData = () => {
-    const { captures } = this.state;
-    for (let capture of captures) {
-      this.addToOCRDataList(capture);
+    const { data } = this.state;
+    for (let i = 0; i < data.length; i++) {
+      this.addToOCRDataList(data[i]);
     }
+    this.setState({ ocrDataList: this.state.ocrDataList });
   };
 
   showLines = (index) => {
-    const { ocrDataList, captures } = this.state;
-    this.props.navigation.navigate('ShowLines', { capture: captures[index], ocrData: ocrDataList[index] });
+    const { data } = this.state;
+    this.props.navigation.navigate('ShowLines', { capture: data[index].capture, ocrData: data[index].ocrData });
   };
 
   render() {
-    const { ocrDataList, title, captures } = this.state;
+    const { title, data } = this.state;
+    //console.log(data[0]);
 
     return (
       <React.Fragment>
@@ -170,7 +183,7 @@ export default class UploadPage extends React.Component {
         />
         }
 
-        <Gallery captures={captures} ocrDataList={ocrDataList} showLines={this.showLines} />
+        <Gallery data={ data } showLines={this.showLines} />
       </React.Fragment>
     );
   };

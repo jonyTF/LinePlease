@@ -26,7 +26,7 @@ export default class InputScriptPage extends React.Component {
       allowsEditing: true
     });
     console.log(image);
-    this.props.navigation.navigate('Upload', { captures: [image] });
+    //this.props.navigation.navigate('Upload', { captures: [image] });
   };
 
   // Perhaps replace the button text with image buttons
