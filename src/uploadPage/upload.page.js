@@ -20,9 +20,9 @@ export default class UploadPage extends React.Component {
     "cancelled": false,
     "height": 4048,
     "type": "image",
-    "uri": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252FLinePlease-94cdde7e-05b2-4193-bef6-6fa95eedda87/ImagePicker/3ac8b9cf-0d07-43b2-a5f6-d5b2a9da371f.jpg",
+    "uri": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252FLinePlease-b7e4a64c-9dab-46e5-83bb-2acc3d8c0ead/ImagePicker/4a9ffad8-6fad-4047-94d5-52decc606b57.jpg",
     "width": 3036,
-  }; 
+  };
 
   captures = [this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test, this.test];
 
@@ -128,7 +128,7 @@ export default class UploadPage extends React.Component {
       const ocrData = {overlay: testdata, orientation: 0};
       item.ocrData = ocrData;
       console.log('done');
-      this.setState({ ocrDataList: this.state.ocrDataList });
+      this.setState({ data: this.state.data });
     }, 5000);
   };
 
@@ -137,11 +137,11 @@ export default class UploadPage extends React.Component {
     for (let i = 0; i < data.length; i++) {
       this.addToOCRDataList(data[i]);
     }
-    this.setState({ ocrDataList: this.state.ocrDataList });
   };
 
   showLines = (index) => {
     const { data } = this.state;
+    console.log(index)
     this.props.navigation.navigate('ShowLines', { capture: data[index].capture, ocrData: data[index].ocrData });
   };
 
@@ -183,7 +183,7 @@ export default class UploadPage extends React.Component {
         />
         }
 
-        <Gallery data={ data } showLines={this.showLines} />
+        <Gallery data={ data } state={ this.state } showLines={this.showLines} />
       </React.Fragment>
     );
   };

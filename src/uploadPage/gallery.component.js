@@ -35,13 +35,14 @@ export default class Gallery extends React.Component {
   };
 
   render() {
-    const { data } = this.props;
+    const { data, state } = this.props;
     console.log('no: ', data[0].ocrData == null);
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <FlatList
           keyExtractor={(item, index) => ''+index}
           data={data}
+          extraData={state}
           renderItem={this.renderItem}
           numColumns={4}
           legacyImplementation={true}

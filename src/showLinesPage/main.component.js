@@ -21,11 +21,11 @@ export default({
       <Animated.Image 
         source={{uri: capture.uri}}
         style={{ 
-          width: winHeight, 
+          width: winHeight+20, 
           height: capture.height * winHeight/capture.width,
           position: 'absolute',  
           top: imTop,   
-          left: imageX,  
+          left: 0,  
         }}
       />
       <AnimatedTouchableOpacity 

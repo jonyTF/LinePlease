@@ -19,6 +19,16 @@ export default class ShowLinesPage extends React.Component {
     cropBot: new Animated.Value(0),
     imageXOld: 0,
     imageX: 0,
+    //capture: this.props.navigation.getParam('capture', []),
+    capture: {
+      "cancelled": false,
+      "height": 4048,
+      "type": "image",
+      "uri": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252FLinePlease-b7e4a64c-9dab-46e5-83bb-2acc3d8c0ead/ImagePicker/4a9ffad8-6fad-4047-94d5-52decc606b57.jpg",
+      "width": 3036,
+    },
+    //ocrData: this.props.navigation.getParam('ocrData', []),
+    ocrData: {overlay: data, orientation: 0},
   };
 
   panResponder = PanResponder.create({
@@ -44,17 +54,7 @@ export default class ShowLinesPage extends React.Component {
 
   componentDidMount() {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_LEFT);
-    //const capture = this.props.navigation.getParam('capture', []);
-    const capture = {
-      "cancelled": false,
-      "height": 4048,
-      "type": "image",
-      "uri": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252FLinePlease-94cdde7e-05b2-4193-bef6-6fa95eedda87/ImagePicker/495c495c-9e24-4645-bcaa-535975d96dcb.jpg",
-      "width": 3036,
-    };
-    //const ocrData = this.props.navigation.getParam('ocrData', []);
-    const ocrData = {overlay: data, orientation: 0};
-    this.cropLines(capture, ocrData);
+    this.cropLines(this.state.capture, this.state.ocrData);
   };
 
   addToCharacterLines = (curName, curWords, screenFactor) => {
@@ -221,32 +221,26 @@ export default class ShowLinesPage extends React.Component {
 
   render() {
     //const capture = this.props.navigation.getParam('capture', []);
-    const capture = {
-      "cancelled": false,
-      "height": 4048,
-      "type": "image",
-      "uri": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252FLinePlease-94cdde7e-05b2-4193-bef6-6fa95eedda87/ImagePicker/495c495c-9e24-4645-bcaa-535975d96dcb.jpg",
-      "width": 3036,
-    }; 
-    const { croppedLines, curLine, curCharacters, linesByCharacter, cropTop, cropBot, imageX } = this.state;
+    const { croppedLines, curLine, curCharacters, linesByCharacter, cropTop, cropBot, imageX, capture } = this.state;
 
     return (
       <React.Fragment>
         <StatusBar hidden={true} />
 
         { croppedLines.length > 0 && 
-          <View {...this.panResponder.panHandlers}>
-            <Main 
-              capture={capture}
-              curCharacters={curCharacters}
-              linesByCharacter={linesByCharacter}
-              cropTop={cropTop}
-              cropBot={cropBot}
-              nextLine={this.nextLine}
-              prevLine={this.prevLine}
-              imageX={imageX}
-            />
-          </View>
+          <Main 
+            capture={capture}
+            curCharacters={curCharacters}
+            linesByCharacter={linesByCharacter}
+            cropTop={cropTop}
+            cropBot={cropBot}
+            nextLine={this.nextLine}
+            prevLine={this.prevLine}
+            imageX={imageX}
+          />
+          /*<View {...this.panResponder.panHandlers}>
+
+          </View>*/
         }
 
         <Icon
