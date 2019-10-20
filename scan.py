@@ -29,7 +29,7 @@ cv2.waitKey(0)
 cv2.destroyAllWindows()
 
 # Find contours in edged image and keep only the largest ones
-cnts = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+cnts = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 cnts = imutils.grab_contours(cnts)
 cnts = sorted(cnts, key=cv2.contourArea, reverse=True)[:5]
 
