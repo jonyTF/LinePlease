@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "469727888550",
+    "firebase_url": "https://lineplease-5aa9e.firebaseio.com",
+    "project_id": "lineplease-5aa9e",
+    "storage_bucket": "lineplease-5aa9e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:469727888550:android:fee7423c1f774a4a1a6067",
+        "android_client_info": {
+          "package_name": "com.jonytf.line_please"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "469727888550-1tg91dv8crgpkpptfqhkh8cgf0maqohf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3srVsVbzout6CEA4I1tZwCEcHJ2VFxsw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "469727888550-1tg91dv8crgpkpptfqhkh8cgf0maqohf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

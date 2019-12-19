@@ -20,6 +20,9 @@ dependencies:
   flutter:
     sdk: flutter
 
+  firebase_ml_vision: ^0.9.3+5
+  image_picker: ^0.6.2+3
+
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
@@ -39,6 +42,10 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/img/test.jpg
+    - assets/img/test_edited.jpg
 
   # To add assets to your application, add an assets section, like this:
   # assets:
