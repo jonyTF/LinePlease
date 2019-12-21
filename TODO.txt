@@ -1,3 +1,9 @@
+- Once script is uploaded and text has been detected:
+	- Prompt user to tap on one of their lines
+	- It will select that line with a highlighted box, and it will also select other boxes that it thinks are the same character, and you press a check box to confirm those automatic selections
+	- When you upload future images, it will have automatic selections at the very beginning, and you confirm/deny as well.
+
+
 - Taskbar that appears on the side while you are looking at lines
     - maybe make this like an action button sort of thing?
     - includes:
