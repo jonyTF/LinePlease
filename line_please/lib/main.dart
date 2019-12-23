@@ -115,7 +115,7 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
 
     print(visionText.text);
 
-    _processScriptPage(visionText);
+    _processScript(visionText);
 
     setState(() {
       imageFile = f;
@@ -124,7 +124,7 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
     });
   }
 
-  void _processScriptPage(VisionText visionText) {
+  void _processScript(VisionText visionText) {
 
     var curName = '';
     var curWords = <List<TextElement>>[];
@@ -170,6 +170,10 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
     }
   }
 
+  // TODO: Fix the bug where "20" is considered a character
+  // But is there any way to fix this? What if 20 is the name of an actual character?
+  // Solution: in the character selection dialogue, user can "trash" certain
+  // characters that are not actually characters, but mis-detections.
   bool _isName(String text) => text.length >= 2 && text == text.toUpperCase();
 
   void _addToCharacterLines(String curName, List<List<TextElement>> curWords) {
@@ -233,12 +237,14 @@ class ScriptDetailsPage extends StatefulWidget {
 class ImageOverlayPainter extends CustomPainter {
   final int imWidth;
   final int imHeight;
-  final List<Rect> textData;
+  final Map<String, List<List<Rect>>> textData;
 
   ImageOverlayPainter({@required this.textData, @required this.imWidth, @required this.imHeight});
 
   @override
   void paint(Canvas canvas, Size size) {
+    final TEST_CHARACTER = 'TRUFFALDINO';
+
     final paint = Paint();
     paint.color = Colors.red;
 
@@ -246,19 +252,27 @@ class ImageOverlayPainter extends CustomPainter {
     final ratioH = size.height/imHeight;
     //print('RATIO_W: $ratioW, RATIO_H: $ratioH');
 
-    for (Rect r in textData) {
-      //print('OLD_RECT: $r');
-      final left = r.left * ratioW;
-      final right = r.right * ratioW;
-      final top = r.top * ratioH;
-      final bottom = r.bottom * ratioH;
-      //Rect new_rect = Rect.fromLTRB(left, top, right, bottom);
-      //print('NEW_RECT : $new_rect');
-      
-      canvas.drawLine(Offset(left, top), Offset(right, top), paint);
-      canvas.drawLine(Offset(left, bottom), Offset(right, bottom), paint);
-      canvas.drawLine(Offset(left, top), Offset(left, bottom), paint);
-      canvas.drawLine(Offset(right, top), Offset(right, bottom), paint);
+    for (String char in textData.keys) {
+      for (List<Rect> lineRects in textData[char]) {
+        for (Rect r in lineRects) {
+          //print('OLD_RECT: $r');
+          final left = r.left * ratioW;
+          final right = r.right * ratioW;
+          final top = r.top * ratioH;
+          final bottom = r.bottom * ratioH;
+          //Rect new_rect = Rect.fromLTRB(left, top, right, bottom);
+          //print('NEW_RECT : $new_rect');
+
+          if (char == TEST_CHARACTER) {
+            canvas.drawRect(Rect.fromLTRB(left, top, right, bottom), paint);
+          } else {
+            canvas.drawLine(Offset(left, top), Offset(right, top), paint);
+            canvas.drawLine(Offset(left, bottom), Offset(right, bottom), paint);
+            canvas.drawLine(Offset(left, top), Offset(left, bottom), paint);
+            canvas.drawLine(Offset(right, top), Offset(right, bottom), paint);
+          }
+        }
+      }
     }
   }
 
