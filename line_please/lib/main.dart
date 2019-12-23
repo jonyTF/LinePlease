@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:image_picker/image_picker.dart';
@@ -72,6 +74,7 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
   final Map<String, List<List<Rect>>> textData = HashMap<String, List<List<Rect>>>();
   int imWidth;
   int imHeight;
+  String character;
 
   ScriptDetailsPageState({@required this.script});
 
@@ -80,8 +83,10 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
     if (imageFile == null)
       _getTextData();
 
+    print('REPAINTED...character is $character');
+
     Widget imageOverlay = CustomPaint(
-      foregroundPainter: ImageOverlayPainter(textData: textData, imWidth: imWidth, imHeight: imHeight),
+      foregroundPainter: ImageOverlayPainter(textData: textData, imWidth: imWidth, imHeight: imHeight, character: character),
       child: imageFile != null ? Image.file(imageFile) : Image.asset('assets/img/test.jpg'),
     );
 
@@ -92,6 +97,10 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
       body: ListView(
         children: [
           Text('Page count: ${script.pageCount}'),
+          RaisedButton(
+            onPressed: _chooseCharacter,
+            child: const Text('Change character'),
+          ),
           imageOverlay,
         ],
       ),
@@ -122,49 +131,81 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
       imWidth = decodedImage.width;
       imHeight = decodedImage.height;
     });
+
+    await _chooseCharacter();
+  }
+
+  Future<void> _chooseCharacter() async {
+    final char = await showDialog<String>(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+              title: const Text('Choose character'),
+              children: textData.keys.map((character) {
+                return SimpleDialogOption(
+                  onPressed: () => Navigator.pop(context, character),
+                  child: Text(character),
+                );
+              }).toList(),
+          );
+        }
+    );
+    setState(() {
+      character = char;
+    });
   }
 
   void _processScript(VisionText visionText) {
 
+    textData['test'] = [];
     var curName = '';
     var curWords = <List<TextElement>>[];
-    for (TextBlock block in visionText.blocks) {
-      for (TextLine line in block.lines) {
-        final firstWord = line.elements[0].text;
-        if (_isName(firstWord)) {
-          // If the current line has a name in it
-          if (curName.length > 0) {
-            if (curWords.length > 0) {
-              // Add the current lines to the previous character's
-              _addToCharacterLines(curName, curWords);
-            }
-            curName = '';
-            curWords = <List<TextElement>>[];
-          }
 
-          // Go through the entire line and add to the name if the name is
-          // multiple words long
-          curName = firstWord;
-          var i;
-          for (i = 1; i < line.elements.length; i++) {
-            if (_isName(line.elements[i].text))
-              curName += ' ' + line.elements[i].text;
-            else
-              break;
-          }
+    // ---- FOR TESTING ------ //
+    /*for (TextBlock block in visionText.blocks) {
+      textData['test'].add([block.boundingBox]);
+    }*/
+    // ---------------------- //
 
-          // Add the rest of the words in the line
-          final words = line.elements.sublist(i);
-          if (words.length > 0) {
-            curWords.add(words);
+    // Flatten the visionText blocks list to put all the lines in a single list
+    var allLines = visionText.blocks.expand((block) => block.lines).toList();
+    // Sort the lines by their y coordinates
+    allLines.sort((line1, line2) => (line1.boundingBox.top - line2.boundingBox.top) > 0 ? 1 : -1);
+    for (TextLine line in allLines) {
+      final firstWord = line.elements[0].text;
+      if (_isName(firstWord)) {
+        // If the current line has a name in it
+        if (curName.length > 0) {
+          if (curWords.length > 0) {
+            // Add the current lines to the previous character's
+            _addToCharacterLines(curName, curWords);
           }
-        } else {
-          // Current line does not contain a name, so add all
-          // the words in the current line
-          final words = line.elements;
-          if (words.length > 0) {
-            curWords.add(words);
-          }
+          curName = '';
+          curWords = <List<TextElement>>[];
+        }
+
+        // Go through the entire line and add to the name if the name is
+        // multiple words long
+        curName = firstWord;
+        var i;
+        for (i = 1; i < line.elements.length; i++) {
+          if (_isName(line.elements[i].text))
+            curName += ' ' + line.elements[i].text;
+          else
+            break;
+        }
+
+        // Add the rest of the words in the line
+        final words = line.elements.sublist(i);
+        if (words.length > 0) {
+          curWords.add(words);
+        }
+      } else {
+        // Current line does not contain a name, so add all
+        // the words in the current line
+        final words = line.elements;
+        if (words.length > 0) {
+          curWords.add(words);
         }
       }
     }
@@ -238,15 +279,13 @@ class ImageOverlayPainter extends CustomPainter {
   final int imWidth;
   final int imHeight;
   final Map<String, List<List<Rect>>> textData;
+  final String character;
 
-  ImageOverlayPainter({@required this.textData, @required this.imWidth, @required this.imHeight});
+  ImageOverlayPainter({@required this.textData, @required this.imWidth, @required this.imHeight, @required this.character});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final TEST_CHARACTER = 'TRUFFALDINO';
-
     final paint = Paint();
-    paint.color = Colors.red;
 
     final ratioW = size.width/imWidth;
     final ratioH = size.height/imHeight;
@@ -260,10 +299,14 @@ class ImageOverlayPainter extends CustomPainter {
           final right = r.right * ratioW;
           final top = r.top * ratioH;
           final bottom = r.bottom * ratioH;
+          final middleX = (left+right)/2;
+          final middleY = (top+bottom)/2;
           //Rect new_rect = Rect.fromLTRB(left, top, right, bottom);
           //print('NEW_RECT : $new_rect');
 
-          if (char == TEST_CHARACTER) {
+          paint.color = Colors.red;
+
+          if (char == character) {
             canvas.drawRect(Rect.fromLTRB(left, top, right, bottom), paint);
           } else {
             canvas.drawLine(Offset(left, top), Offset(right, top), paint);
@@ -277,7 +320,29 @@ class ImageOverlayPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    return false;
+  bool shouldRepaint(ImageOverlayPainter oldDelegate) {
+    return oldDelegate.character != character;
+  }
+
+  void _drawText(Canvas canvas, String text, double x, double y, Size size, Color color) {
+    final textStyle = TextStyle(
+      color: color,
+      fontSize: 10,
+    );
+    final textSpan = TextSpan(
+      text: text,
+      style: textStyle,
+    );
+    final textPainter = TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout(
+      minWidth: 0,
+      maxWidth: size.width,
+    );
+
+    final offset = Offset(x, y);
+    textPainter.paint(canvas, offset);
   }
 }
