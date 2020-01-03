@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
+import 'package:line_please/constants.dart';
 import 'package:line_please/models/script.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:image_picker/image_picker.dart';
@@ -24,7 +25,7 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
 
     print('REPAINTED...character is $character');
 
-    Widget imageOverlay = CustomPaint(
+    final Widget imageOverlay = CustomPaint(
       foregroundPainter: ImageOverlayPainter(textData: textData, imWidth: imWidth, imHeight: imHeight, character: character),
       child: imageFile != null ? Image.file(imageFile) : Image.asset('assets/img/test.jpg'),
     );
@@ -71,11 +72,13 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
       imHeight = decodedImage.height;
     });
 
-    await _chooseCharacter();
+    _chooseCharacter();
   }
 
-  Future<void> _chooseCharacter() async {
-    final char = await showDialog<String>(
+  void _chooseCharacter() async {
+    final result = await Navigator.pushNamed(context, characterSelectRoute, arguments: textData.keys.toList());
+    print(result);
+    /*final char = await showDialog<String>(
         context: context,
         builder: (BuildContext context) {
           return SimpleDialog(
@@ -91,7 +94,7 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
     );
     setState(() {
       character = char;
-    });
+    });*/
   }
 
   void _processScript(VisionText visionText) {
@@ -206,7 +209,7 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
 class ScriptDetailsPage extends StatefulWidget {
   final Script script;
 
-  ScriptDetailsPage({@required this.script});
+  ScriptDetailsPage({Key key, @required this.script}) : super(key: key);
 
   @override
   ScriptDetailsPageState createState() {
