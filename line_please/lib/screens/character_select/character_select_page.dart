@@ -171,6 +171,13 @@ class CharacterSelectPageState extends State {
     final newName = await _getNewName(character);
 
     if (newName != null) {
+      bool confirmed = await _getConfirmation(
+        'Are you sure you would like to rename "$character" to "$newName"?'
+      );
+      if (!confirmed) {
+        return;
+      }
+
       _actionsToPerform.add(
           CharModAction(action: CharModAction.RENAME, data: [character, newName])
       );
@@ -188,6 +195,13 @@ class CharacterSelectPageState extends State {
     final mergeName = await _getMergeName(curCharacters);
 
     if (mergeName != null) {
+      bool confirmed = await _getConfirmation(
+        'Are you sure you would like to merge the characters $curCharacters under "$mergeName"?'
+      );
+      if (!confirmed) {
+        return;
+      }
+
       curCharacters.remove(mergeName);
       curCharacters.insert(0, mergeName);
       _actionsToPerform.add(
@@ -203,8 +217,16 @@ class CharacterSelectPageState extends State {
     }
   }
 
-  void _delete() {
+  void _delete() async {
     List<String> curCharacters = _getCurSelected();
+
+    bool confirmed = await _getConfirmation(
+      'Are you sure you would like to delete the characters $curCharacters?'
+    );
+    if (!confirmed) {
+      return;
+    }
+
     _actionsToPerform.add(
         CharModAction(action: CharModAction.DELETE, data: curCharacters)
     );
@@ -263,6 +285,40 @@ class CharacterSelectPageState extends State {
             ],
           );
         }
+    );
+  }
+
+  Future<bool> _getConfirmation(String message) async {
+    return await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Are you sure?'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(message),
+                Text('This action cannot be undone.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            new FlatButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: Text('NO'),
+            ),
+            new FlatButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: Text('YES'),
+            )
+          ],
+        );
+      },
     );
   }
 }
