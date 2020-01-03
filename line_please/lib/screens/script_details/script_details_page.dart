@@ -3,6 +3,7 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:line_please/constants.dart';
+import 'package:line_please/models/char_mod_action.dart';
 import 'package:line_please/models/script.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:image_picker/image_picker.dart';
@@ -11,7 +12,8 @@ import 'package:line_please/screens/script_details/widgets/image_overlay_painter
 class ScriptDetailsPageState extends State<ScriptDetailsPage> {
   final Script script;
   File imageFile;
-  final Map<String, List<List<Rect>>> textData = HashMap<String, List<List<Rect>>>();
+  // TODO: Turn this List<List<Rect>> BS into its own class, perhaps a LineGroup class
+  Map<String, List<List<Rect>>> textData = HashMap<String, List<List<Rect>>>();
   int imWidth;
   int imHeight;
   String character;
@@ -77,24 +79,50 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
 
   void _chooseCharacter() async {
     final result = await Navigator.pushNamed(context, characterSelectRoute, arguments: textData.keys.toList());
-    print(result);
-    /*final char = await showDialog<String>(
-        context: context,
-        builder: (BuildContext context) {
-          return SimpleDialog(
-            title: const Text('Choose character'),
-            children: textData.keys.map((character) {
-              return SimpleDialogOption(
-                onPressed: () => Navigator.pop(context, character),
-                child: Text(character),
-              );
-            }).toList(),
-          );
-        }
-    );
+    print('RESULT: $result');
+    _modifyTextData(result);
+  }
+
+  void _modifyTextData(List<CharModAction> actions) {
+    for (CharModAction action in actions) {
+      switch (action.action) {
+        case CharModAction.CHOOSE:
+          character = action.data[0];
+          break;
+        case CharModAction.DELETE:
+          // Somehow add these characters' lines to the previously detected
+          // characters lines, if there is such a previous character
+
+          // TEMPORARY:
+          for (String character in action.data) {
+            textData.remove(character);
+          }
+          break;
+        case CharModAction.MERGE:
+          String mergeChar = action.data[0];
+
+          List<List<Rect>> mergeLines = [];
+          for (int i = 1; i < action.data.length; i++) {
+            mergeLines.addAll(textData[action.data[i]]);
+            textData.remove(action.data[i]);
+          }
+          textData[mergeChar].addAll(mergeLines);
+          break;
+        case CharModAction.RENAME:
+          String oldName = action.data[0];
+          String newName = action.data[1];
+
+          textData[newName] = textData[oldName];
+          textData.remove(oldName);
+          break;
+      }
+    }
+
+    print(textData.keys);
+
     setState(() {
-      character = char;
-    });*/
+      textData = textData;
+    });
   }
 
   void _processScript(VisionText visionText) {

@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:line_please/models/char_mod_action.dart';
+import 'package:line_please/screens/character_select/widgets/character_tile.dart';
 
 class CharacterSelectPageState extends State {
   final List<String> characters;
@@ -33,7 +34,6 @@ class CharacterSelectPageState extends State {
           return CharacterTile(
               selected: _selected[character],
               character: character,
-              onLongPress: null,
               onTap: _select,
           );
         },
@@ -90,7 +90,7 @@ class CharacterSelectPageState extends State {
   List<Widget> _getActions(List<String> curSelected) {
     List<Widget> actions = <Widget>[];
     if (curSelected.length == 0) {
-      // Add help button?
+      // Add help button
       actions.add(
         IconButton(
           icon: Icon(Icons.help, color: Colors.white),
@@ -101,7 +101,7 @@ class CharacterSelectPageState extends State {
         )
       );
     } else if (curSelected.length == 1) {
-      // Add button to select current character
+      // Add button to select, rename, or delete current character
       actions.addAll([
         FlatButton(
           onPressed: () {
@@ -163,6 +163,7 @@ class CharacterSelectPageState extends State {
 
     // Navigate back to script details page, passing _actionsToPerform in the arguments
     print(_actionsToPerform);
+    Navigator.pop(context, _actionsToPerform);
   }
 
   void _rename() async {
@@ -221,7 +222,7 @@ class CharacterSelectPageState extends State {
     List<String> curCharacters = _getCurSelected();
 
     bool confirmed = await _getConfirmation(
-      'Are you sure you would like to delete the characters $curCharacters?'
+      'Are you sure you would like to delete the character(s) $curCharacters?'
     );
     if (!confirmed) {
       return;
@@ -331,36 +332,5 @@ class CharacterSelectPage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
     return CharacterSelectPageState(characters: characters);
-  }
-}
-
-//https://flutter.dev/docs/development/ui/interactive#the-parent-widget-manages-the-widgets-state
-class CharacterTile extends StatelessWidget {
-  final bool selected;
-  final String character;
-  final ValueChanged<String> onLongPress;
-  final ValueChanged<String> onTap;
-
-  CharacterTile({Key key, @required this.selected: false, @required this.character, @required this.onLongPress, @required this.onTap}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: selected ? Colors.grey[400] : Colors.white,
-      child: ListTile(
-        title: Text(character),
-        onTap: _handleTap,
-        onLongPress: _handleLongPress,
-        selected: selected,
-      ),
-    );
-  }
-
-  void _handleTap() {
-    onTap(character);
-  }
-
-  void _handleLongPress() {
-    onLongPress(character);
   }
 }
