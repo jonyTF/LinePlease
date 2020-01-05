@@ -1,3 +1,7 @@
+- use the flutter image manipulation library
+	- adjust contrast so that script is perfectly black and white
+	- when detecting words, automatically straighten the lines/rotate the image so that they are perfectly parallel
+
 - Once script is uploaded and text has been detected:
 	- Prompt user to tap on one of their lines
 	- It will select that line with a highlighted box, and it will also select other boxes that it thinks are the same character, and you press a check box to confirm those automatic selections

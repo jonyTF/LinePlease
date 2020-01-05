@@ -6,7 +6,7 @@ class CharacterTile extends StatelessWidget {
   final String character;
   final ValueChanged<String> onTap;
 
-  CharacterTile({Key key, @required this.selected: false, @required this.character, @required this.onTap}) : super(key: key);
+  CharacterTile({Key key, this.selected: false, @required this.character, @required this.onTap}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

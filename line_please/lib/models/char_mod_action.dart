@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 class CharModAction {
   // Class that contains the actions that need to be performed on the

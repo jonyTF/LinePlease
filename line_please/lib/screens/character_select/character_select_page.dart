@@ -23,20 +23,24 @@ class CharacterSelectPageState extends State {
 
   @override
   Widget build(BuildContext context) {
-    Widget appBar = _buildAppBar();
+    final appBar = _buildAppBar();
+    final characterList = ListView.builder(
+      itemCount: characters.length,
+      itemBuilder: (context, index) {
+        String character = characters[index];
+        return CharacterTile(
+          selected: _selected[character],
+          character: character,
+          onTap: _select,
+        );
+      },
+    );
 
-    return Scaffold(
-      appBar: appBar,
-      body: ListView.builder(
-        itemCount: characters.length,
-        itemBuilder: (context, index) {
-          String character = characters[index];
-          return CharacterTile(
-              selected: _selected[character],
-              character: character,
-              onTap: _select,
-          );
-        },
+    return WillPopScope(
+      onWillPop: () async => Future.value(false),
+      child: Scaffold(
+        appBar: appBar,
+        body: characterList,
       ),
     );
   }
@@ -62,6 +66,7 @@ class CharacterSelectPageState extends State {
       _selected[character] = false;
     }
 
+    // TODO: Change this to something more correct
     setState(() {
       _selected = _selected;
     });
@@ -82,6 +87,10 @@ class CharacterSelectPageState extends State {
     }
 
     return AppBar(
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back),
+        onPressed: () => Navigator.pop(context, _actionsToPerform),
+      ),
       title: Text('Character Selection'),
       actions: actions,
     );
@@ -122,7 +131,7 @@ class CharacterSelectPageState extends State {
         IconButton(
           icon: Icon(Icons.delete, color: Colors.white),
           onPressed: () {
-            print('DELETE ${curSelected}');
+            print('DELETE $curSelected');
             _delete();
           },
         )
@@ -134,14 +143,14 @@ class CharacterSelectPageState extends State {
           textColor: Colors.white,
           child: Text('MERGE'),
           onPressed: () {
-            print('MERGE ${curSelected}');
+            print('MERGE $curSelected');
             _merge();
           },
         ),
         IconButton(
           icon: Icon(Icons.delete, color: Colors.white),
           onPressed: () {
-            print('DELETE ${curSelected}');
+            print('DELETE $curSelected');
             _delete();
           },
         )
