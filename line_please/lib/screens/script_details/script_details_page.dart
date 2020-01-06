@@ -9,6 +9,8 @@ import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:line_please/screens/script_details/widgets/image_overlay_painter.dart';
 import 'package:line_please/models/line_group.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:line_please/models/line.dart';
 
 import 'package:line_please/util/geom_utils.dart' as geom;
 
@@ -17,9 +19,11 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
   File imageFile;
   // TODO: Turn this List<List<Rect>> BS into its own class, perhaps a LineGroup class
   Map<String, List<LineGroup>> textData = HashMap<String, List<LineGroup>>();
-  int imWidth;
-  int imHeight;
+  int imWidth = 1;
+  int imHeight = 1;
   String curCharacter;
+
+  Offset _prevTapOffset;
 
   ScriptDetailsPageState({@required this.script}) {
     //TODO: Make this not hardcoded
@@ -33,12 +37,68 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
 
     print('REPAINTED...character is $curCharacter');
 
-    final Widget imageOverlay = CustomPaint(
-      foregroundPainter: ImageOverlayPainter(textData: textData, imWidth: imWidth, imHeight: imHeight, character: curCharacter),
+    final imageOverlay = CustomPaint(
+      foregroundPainter: ImageOverlayPainter(
+        textData: textData,
+        imWidth: imWidth,
+        imHeight: imHeight,
+        character: curCharacter,
+        mode: ImageOverlayPainter.SELECT_MODE,
+      ),
       child: imageFile != null ? Image.file(imageFile) : Image.asset('assets/img/test.jpg'),
     );
 
+    // Reference: https://gist.github.com/sma/c6a9111d58c3deb83711106cec6152ee
+    final photoView = PhotoView.customChild(
+      child: imageOverlay,
+      childSize: Size(imWidth.toDouble(), imHeight.toDouble()),
+      minScale: PhotoViewComputedScale.contained * 1,
+
+      // TODO: Implement tap down and tap up functionality
+      // HOW THIS SHOULD WORK:
+      // Tap Down: store tap position in a variable
+      // Tap Up: check current tap position to that variable position
+      //         if they are the same, that means user meant to select a line
+      //         and select the correct line accordingly.
+
+      // NOTES: make sure to take into account the scroll/zoom position
+      // Perhaps this can be done with ValueChanged<PhotoViewScaleState>
+      onTapDown: (context, details, controllerValue) {
+        _prevTapOffset = details.localPosition;
+      },
+      onTapUp: (context, details, controllerValue) {
+        if (_prevTapOffset == details.localPosition) {
+          final offset = details.localPosition;
+          print('TAPPED at offset: $offset');
+          // need to translate line.rect coordinates to screen coordinates
+          // COMPLETE/FIX THIS
+          for (final lineGroup in textData[curCharacter]) {
+            for (final line in lineGroup.lines) {
+              if (line.rect.contains(offset)) {
+                print('TOGGLE');
+                line.enabled = !line.enabled;
+                return;
+              }
+            }
+          }
+        }
+      },
+    );
+
     return Scaffold(
+      appBar: AppBar(
+        title: Text(script.title),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.group),
+            onPressed: _chooseCharacter,
+          ),
+        ],
+      ),
+      body: photoView,
+    );
+
+    /*return Scaffold(
       appBar: AppBar(
         title: Text(script.title),
       ),
@@ -49,10 +109,10 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
             onPressed: _chooseCharacter,
             child: const Text('Change character'),
           ),
-          imageOverlay,
+          photoView,
         ],
       ),
-    );
+    );*/
   }
 
   Future<void> _getTextData() async {
@@ -151,9 +211,10 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
     int index = LineGroup.allLineGroups.indexOf(lineGroup) - 1;
     LineGroup.allLineGroups.remove(lineGroup);
 
+    // TODO: DO something with this lineGroup that is floating around in memory
     if (index >= 0) {
       final newLineGroup = LineGroup.allLineGroups[index];
-      newLineGroup.add(lineGroup.rects);
+      newLineGroup.add(lineGroup.lines);
       if (newLineGroup.isCharacterName) {
         _mergeLineGroupUp(newLineGroup);
       }
@@ -243,11 +304,11 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
     // TODO: How do I account for when there are songs? (all words are in caps)
 
     // Get a single rectangle that bounds all the words in a given line
-    final List<Rect> lineRects = [];
+    final List<Line> lines = [];
     for (List<TextElement> lineElement in curWords) {
       final wordRects = List.generate(lineElement.length, (int index) => lineElement[index].boundingBox);
       final rect = geom.getBoundingBoxFromRects(wordRects);
-      lineRects.add(rect);
+      lines.add(Line(rect: rect));
     }
 
     // Instantiating nameLineGroup adds it to the allLineGroups list
@@ -255,9 +316,10 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
     // (maybe use it to make sure that the name is not blocked by any stray
     // lines)
     final nameRects = List.generate(curName.length, (int index) => curName[index].boundingBox);
-    final nameLineGroup = LineGroup(rects: nameRects, isCharacterName: true);
+    final nameRect = geom.getBoundingBoxFromRects(nameRects);
+    final nameLineGroup = LineGroup(lines: [Line(rect: nameRect)], isCharacterName: true);
 
-    final lineGroup = LineGroup(rects: lineRects);
+    final lineGroup = LineGroup(lines: lines);
     // Add lineRects to the textData map;
     if (textData.containsKey(curNameString)) {
       textData[curNameString].add(nameLineGroup);

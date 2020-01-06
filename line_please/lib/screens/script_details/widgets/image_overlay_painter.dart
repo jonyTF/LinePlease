@@ -1,15 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:line_please/models/line_group.dart';
 import 'package:collection/collection.dart';
+import 'package:line_please/models/line.dart';
 import 'dart:ui';
 
 class ImageOverlayPainter extends CustomPainter {
+  static const int SELECT_MODE = 0; // Mode for enabling/disabling certain lines
+  static const int ACTIVE_MODE = 1; // Mode for running through lines
+
   final int imWidth;
   final int imHeight;
   final Map<String, List<LineGroup>> textData;
   final String character;
+  final int mode;
 
-  ImageOverlayPainter({@required this.textData, @required this.imWidth, @required this.imHeight, @required this.character});
+  ImageOverlayPainter({
+    @required this.textData,
+    @required this.imWidth,
+    @required this.imHeight,
+    @required this.character,
+    @required this.mode,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -21,7 +32,8 @@ class ImageOverlayPainter extends CustomPainter {
 
     for (String char in textData.keys) {
       for (LineGroup lineGroup in textData[char]) {
-        for (Rect r in lineGroup.rects) {
+        for (Line line in lineGroup.lines) {
+          Rect r = line.rect;
           //print('OLD_RECT: $r');
           final left = r.left * ratioW;
           final right = r.right * ratioW;
@@ -29,21 +41,30 @@ class ImageOverlayPainter extends CustomPainter {
           final bottom = r.bottom * ratioH;
           //final middleX = (left+right)/2;
           //final middleY = (top+bottom)/2;
-          //Rect new_rect = Rect.fromLTRB(left, top, right, bottom);
+          Rect newRect = Rect.fromLTRB(left, top, right, bottom);
           //print('NEW_RECT : $new_rect');
 
-          paint.color = Colors.red;
-
           if (char == character) {
-            if (lineGroup.isCharacterName)
-              canvas.clipRect(Rect.fromLTRB(left, top, right, bottom), clipOp: ClipOp.difference);
-            else
-              canvas.drawRect(Rect.fromLTRB(left, top, right, bottom), paint);
+            if (lineGroup.isCharacterName) {
+              canvas.clipRect(newRect,
+                  clipOp: ClipOp.difference);
+            } else {
+              if (mode == SELECT_MODE) {
+                paint.color = Colors.black;
+                paint.style = PaintingStyle.stroke;
+                paint.strokeWidth = 3;
+                canvas.drawRect(newRect, paint);
+                if (line.enabled) {
+                  paint.color = Color.fromRGBO(50, 205, 50, 0.5);
+                  paint.style = PaintingStyle.fill;
+                  canvas.drawRect(newRect, paint);
+                }
+              }
+            }
           } else {
-            canvas.drawLine(Offset(left, top), Offset(right, top), paint);
-            canvas.drawLine(Offset(left, bottom), Offset(right, bottom), paint);
-            canvas.drawLine(Offset(left, top), Offset(left, bottom), paint);
-            canvas.drawLine(Offset(right, top), Offset(right, bottom), paint);
+            paint.color = Colors.black;
+            paint.style = PaintingStyle.stroke;
+            canvas.drawRect(newRect, paint);
           }
         }
       }
@@ -54,12 +75,14 @@ class ImageOverlayPainter extends CustomPainter {
   bool shouldRepaint(ImageOverlayPainter oldDelegate) {
     // TODO: Make sure that this catches all cases of changes that could occur
     // TODO(BUG): Fix bug where it doesn't update correctly when textData is changed.
+        // THIS bug was somehow fixed? I think it's because the photo view
+        // keeps on repainting continuously?
     bool characterChanged = oldDelegate.character != character;
-    print('old textdata: ${oldDelegate.textData}');
-    print('new textdata: $textData');
+    //print('old textdata: ${oldDelegate.textData}');
+    //print('new textdata: $textData');
     bool textDataKeysChanged = !ListEquality().equals(oldDelegate.textData.keys.toList(), textData.keys.toList());
     bool textDataChanged = !MapEquality().equals(oldDelegate.textData, textData);
-    print('characterChanged: $characterChanged, textDataKeysChanged: $textDataKeysChanged, textDataChanged: $textDataChanged');
+    //print('characterChanged: $characterChanged, textDataKeysChanged: $textDataKeysChanged, textDataChanged: $textDataChanged');
     return characterChanged || textDataKeysChanged || textDataChanged;
   }
 
