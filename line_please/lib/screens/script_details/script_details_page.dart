@@ -24,6 +24,7 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
   String curCharacter;
 
   Offset _prevTapOffset;
+  PhotoViewController _photoViewController;
 
   ScriptDetailsPageState({@required this.script}) {
     //TODO: Make this not hardcoded
@@ -31,11 +32,21 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _photoViewController = PhotoViewController();
+  }
+
+  @override
+  void dispose() {
+    _photoViewController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (imageFile == null)
       _getTextData();
-
-    print('REPAINTED...character is $curCharacter');
 
     final imageOverlay = CustomPaint(
       foregroundPainter: ImageOverlayPainter(
@@ -52,31 +63,45 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
     final photoView = PhotoView.customChild(
       child: imageOverlay,
       childSize: Size(imWidth.toDouble(), imHeight.toDouble()),
-      minScale: PhotoViewComputedScale.contained * 1,
-
-      // TODO: Implement tap down and tap up functionality
-      // HOW THIS SHOULD WORK:
-      // Tap Down: store tap position in a variable
-      // Tap Up: check current tap position to that variable position
-      //         if they are the same, that means user meant to select a line
-      //         and select the correct line accordingly.
-
-      // NOTES: make sure to take into account the scroll/zoom position
-      // Perhaps this can be done with ValueChanged<PhotoViewScaleState>
+      initialScale: PhotoViewComputedScale.covered,
+      minScale: PhotoViewComputedScale.covered,
+      controller: _photoViewController,
       onTapDown: (context, details, controllerValue) {
         _prevTapOffset = details.localPosition;
       },
       onTapUp: (context, details, controllerValue) {
-        if (_prevTapOffset == details.localPosition) {
-          final offset = details.localPosition;
-          print('TAPPED at offset: $offset');
-          // need to translate line.rect coordinates to screen coordinates
-          // COMPLETE/FIX THIS
+        final diff = _prevTapOffset-details.localPosition;
+        // Make sure finger did not move that much from original position
+        if (diff.distance < 15) {
+          final box = context.findRenderObject() as RenderBox;
+          final viewportWidth = box.size.width;
+          final viewportHeight = box.size.height;
+          final tapPos = details.localPosition;
+          final tapPosRatio = Offset(tapPos.dx/viewportWidth, tapPos.dy/viewportHeight);
+
+          final zoomScale = _photoViewController.scale;
+          final zoomPos = _photoViewController.position;
+
+          final scaledImWidth = imWidth*zoomScale;
+          final scaledImHeight = imHeight*zoomScale;
+
+          final viewportX = scaledImWidth/2 - zoomPos.dx - viewportWidth/2;
+          final viewportY = scaledImHeight/2 - zoomPos.dy - viewportHeight/2;
+
+          final x = viewportX + tapPosRatio.dx*viewportWidth;
+          final y = viewportY + tapPosRatio.dy*viewportHeight;
+
+          final offset = Offset(x/zoomScale, y/zoomScale);
+
+          // TODO: Make this faster? Or rather, check that it's sufficiently
+          // speedy in production mode.
+          // TODO: Disable double tap to zoom in/out
           for (final lineGroup in textData[curCharacter]) {
             for (final line in lineGroup.lines) {
               if (line.rect.contains(offset)) {
-                print('TOGGLE');
-                line.enabled = !line.enabled;
+                setState(() {
+                  line.enabled = !line.enabled;
+                });
                 return;
               }
             }
@@ -179,8 +204,6 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
       }
     }
 
-    print(textData.keys);
-
     // TODO: Change this to something more correct
     setState(() {});
   }
@@ -194,15 +217,12 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
     // characters lines, if there is such a previous character
     // Then delete the character.
 
-    print('DELETE Characters!!!!');
-    print(textData);
     for (String characterToRemove in characters) {
       for (LineGroup lineGroup in textData[characterToRemove]) {
         _mergeLineGroupUp(lineGroup);
       }
       textData.remove(characterToRemove);
     }
-    print(textData);
   }
 
   void _mergeLineGroupUp(LineGroup lineGroup) {
