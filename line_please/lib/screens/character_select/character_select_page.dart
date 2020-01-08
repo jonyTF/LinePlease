@@ -4,14 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:line_please/models/char_mod_action.dart';
 import 'package:line_please/screens/character_select/widgets/character_tile.dart';
 
-class CharacterSelectPageState extends State {
-  final List<String> characters;
+class CharacterSelectPageState extends State<CharacterSelectPage> {
   Map<String, bool> _selected = HashMap<String, bool>();
   List<CharModAction> _actionsToPerform = [];
-  final _renameTextFieldController = TextEditingController();
+  TextEditingController _renameTextFieldController;
 
-  CharacterSelectPageState({@required this.characters}) {
-    for (String character in characters) {
+  @override
+  void initState() {
+    super.initState();
+    _renameTextFieldController = TextEditingController();
+
+    for (String character in widget.characters) {
       _selected[character] = false;
     }
   }
@@ -25,9 +28,9 @@ class CharacterSelectPageState extends State {
   Widget build(BuildContext context) {
     final appBar = _buildAppBar();
     final characterList = ListView.builder(
-      itemCount: characters.length,
+      itemCount: widget.characters.length,
       itemBuilder: (context, index) {
-        String character = characters[index];
+        String character = widget.characters[index];
         return CharacterTile(
           selected: _selected[character],
           character: character,
@@ -62,7 +65,7 @@ class CharacterSelectPageState extends State {
   }
 
   void _clearSelection() {
-    for (String character in characters) {
+    for (String character in widget.characters) {
       _selected[character] = false;
     }
 
@@ -191,7 +194,7 @@ class CharacterSelectPageState extends State {
       _actionsToPerform.add(
           CharModAction(action: CharModAction.RENAME, data: [character, newName])
       );
-      characters[characters.indexOf(character)] = newName;
+      widget.characters[widget.characters.indexOf(character)] = newName;
       _selected[newName] = _selected[character];
       _selected.remove(character);
 
@@ -218,7 +221,7 @@ class CharacterSelectPageState extends State {
           CharModAction(action: CharModAction.MERGE, data: curCharacters)
       );
       for (int i = 1; i < curCharacters.length; i++) {
-        characters.remove(curCharacters[i]);
+        widget.characters.remove(curCharacters[i]);
         _selected.remove(curCharacters[i]);
       }
 
@@ -241,7 +244,7 @@ class CharacterSelectPageState extends State {
         CharModAction(action: CharModAction.DELETE, data: curCharacters)
     );
     for (String character in curCharacters) {
-      characters.remove(character);
+      widget.characters.remove(character);
       _selected.remove(character);
     }
 
@@ -340,6 +343,6 @@ class CharacterSelectPage extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    return CharacterSelectPageState(characters: characters);
+    return CharacterSelectPageState();
   }
 }

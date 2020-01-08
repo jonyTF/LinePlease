@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:line_please/models/scene.dart';
 
 class Script {
   final String title;
-  final int pageCount;
+  List<Scene> scenes = [];
 
-  Script({@required this.title, @required this.pageCount});
+  Script({@required this.title});
 }

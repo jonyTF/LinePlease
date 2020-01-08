@@ -86,7 +86,7 @@ class ImageOverlayPainter extends CustomPainter {
     return characterChanged || textDataKeysChanged || textDataChanged;
   }
 
-  void _drawText(Canvas canvas, String text, double x, double y, Size size, Color color) {
+  /*void _drawText(Canvas canvas, String text, double x, double y, Size size, Color color) {
     final textStyle = TextStyle(
       color: color,
       fontSize: 10,
@@ -106,5 +106,5 @@ class ImageOverlayPainter extends CustomPainter {
 
     final offset = Offset(x, y);
     textPainter.paint(canvas, offset);
-  }
+  }*/
 }

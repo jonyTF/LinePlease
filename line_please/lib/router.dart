@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:line_please/constants.dart';
 import 'package:line_please/models/script.dart';
+import 'package:line_please/models/scene.dart';
 import 'package:line_please/screens/character_select/character_select_page.dart';
-import 'package:line_please/screens/script_details/script_details_page.dart';
+import 'package:line_please/screens/scene_details/scene_details_page.dart';
 import 'package:line_please/screens/script_list/script_list_page.dart';
+import 'package:line_please/screens/scene_list/scene_list_page.dart';
+
 
 class Router {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -11,21 +14,25 @@ class Router {
 
     switch (settings.name) {
       case scriptListRoute:
+        // TODO: Replace with real data
         // Go to Scripts page with PLACEHOLDER DATA
         return MaterialPageRoute(builder: (_) => ScriptListPage(
           scripts: List.generate(
             20,
             (i) => Script(
               title: 'Script $i',
-              pageCount: i,
             )
           ),
         ));
-      case scriptDetailsRoute:
+      case sceneListRoute:
         final script = args as Script;
-        return MaterialPageRoute(builder: (_) => ScriptDetailsPage(script: script));
+        return MaterialPageRoute(builder: (_) => SceneListPage(script: script));
+      case sceneDetailsRoute:
+        final scene = args as Scene;
+        return MaterialPageRoute(builder: (_) => SceneDetailsPage(scene: scene));
       case characterSelectRoute:
         final characters = args as List<String>;
+        print('CHARACTERS: $characters');
         return MaterialPageRoute(builder: (_) => CharacterSelectPage(characters: characters));
       default:
         return _errorRoute(settings);

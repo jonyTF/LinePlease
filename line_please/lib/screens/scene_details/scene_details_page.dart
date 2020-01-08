@@ -4,20 +4,18 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:line_please/constants.dart';
 import 'package:line_please/models/char_mod_action.dart';
-import 'package:line_please/models/script.dart';
+import 'package:line_please/models/scene.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:line_please/screens/script_details/widgets/image_overlay_painter.dart';
+import 'package:line_please/screens/scene_details/widgets/image_overlay_painter.dart';
 import 'package:line_please/models/line_group.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:line_please/models/line.dart';
 
 import 'package:line_please/util/geom_utils.dart' as geom;
 
-class ScriptDetailsPageState extends State<ScriptDetailsPage> {
-  final Script script;
+class SceneDetailsPageState extends State<SceneDetailsPage> {
   File imageFile;
-  // TODO: Turn this List<List<Rect>> BS into its own class, perhaps a LineGroup class
   Map<String, List<LineGroup>> textData = HashMap<String, List<LineGroup>>();
   int imWidth = 1;
   int imHeight = 1;
@@ -26,7 +24,7 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
   Offset _prevTapOffset;
   PhotoViewController _photoViewController;
 
-  ScriptDetailsPageState({@required this.script}) {
+  SceneDetailsPageState() {
     //TODO: Make this not hardcoded
     LineGroup.clearLineGroups();
   }
@@ -112,32 +110,20 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(script.title),
+        title: Text(widget.scene.name),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.group),
             onPressed: _chooseCharacter,
           ),
+          IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: null,
+          ),
         ],
       ),
       body: photoView,
     );
-
-    /*return Scaffold(
-      appBar: AppBar(
-        title: Text(script.title),
-      ),
-      body: ListView(
-        children: [
-          Text('Page count: ${script.pageCount}'),
-          RaisedButton(
-            onPressed: _chooseCharacter,
-            child: const Text('Change character'),
-          ),
-          photoView,
-        ],
-      ),
-    );*/
   }
 
   Future<void> _getTextData() async {
@@ -147,8 +133,6 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
     final decodedImage = await decodeImageFromList(f.readAsBytesSync());
     print('WIDTH: ${decodedImage.width}, HEIGHT: ${decodedImage.height}');
 
-    //final File imageFile = new File('assets/img/test_edited.jpg');
-    //final FirebaseVisionImage visionImage = FirebaseVisionImage.fromFilePath('assets/img/test_edited.jpg');
     final FirebaseVisionImage visionImage = FirebaseVisionImage.fromFile(f);
 
     final TextRecognizer textRecognizer = FirebaseVision.instance.textRecognizer();
@@ -214,7 +198,7 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
 
   void _deleteCharacters(List<String> characters) {
     // Add these characters' lines to the previously detected
-    // characters lines, if there is such a previous character
+    // characters lines, if there is such a previous character.
     // Then delete the character.
 
     for (String characterToRemove in characters) {
@@ -331,10 +315,6 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
       lines.add(Line(rect: rect));
     }
 
-    // Instantiating nameLineGroup adds it to the allLineGroups list
-    // TODO: figure out whether to add nameLineGroup to textData or not.
-    // (maybe use it to make sure that the name is not blocked by any stray
-    // lines)
     final nameRects = List.generate(curName.length, (int index) => curName[index].boundingBox);
     final nameRect = geom.getBoundingBoxFromRects(nameRects);
     final nameLineGroup = LineGroup(lines: [Line(rect: nameRect)], isCharacterName: true);
@@ -351,13 +331,13 @@ class ScriptDetailsPageState extends State<ScriptDetailsPage> {
   }
 }
 
-class ScriptDetailsPage extends StatefulWidget {
-  final Script script;
+class SceneDetailsPage extends StatefulWidget {
+  final Scene scene;
 
-  ScriptDetailsPage({Key key, @required this.script}) : super(key: key);
+  SceneDetailsPage({Key key, @required this.scene}) : super(key: key);
 
   @override
-  ScriptDetailsPageState createState() {
-    return ScriptDetailsPageState(script: script);
+  SceneDetailsPageState createState() {
+    return SceneDetailsPageState();
   }
 }

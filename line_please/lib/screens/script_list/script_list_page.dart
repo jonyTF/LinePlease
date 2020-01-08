@@ -13,13 +13,16 @@ class ScriptListPage extends StatelessWidget {
       appBar: AppBar(
         title: Text('My Scripts'),
       ),
-      body: ListView.builder(
+      body: ListView.separated(
+        separatorBuilder: (context, index) => Divider(),
         itemCount: scripts.length,
         itemBuilder: (context, index) {
           return ListTile(
             title: Text(scripts[index].title),
+            subtitle: Text('Scenes: ${scripts[index].scenes.length}'),
+            trailing: Icon(Icons.keyboard_arrow_right),
             onTap: () {
-              Navigator.pushNamed(context, scriptDetailsRoute, arguments: scripts[index]);
+              Navigator.pushNamed(context, sceneListRoute, arguments: scripts[index]);
             },
           );
         },
