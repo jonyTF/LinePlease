@@ -6,6 +6,7 @@ import 'package:line_please/screens/character_select/character_select_page.dart'
 import 'package:line_please/screens/scene_details/scene_details_page.dart';
 import 'package:line_please/screens/script_list/script_list_page.dart';
 import 'package:line_please/screens/scene_list/scene_list_page.dart';
+import 'package:line_please/screens/edit_scene/edit_scene_page.dart';
 
 
 class Router {
@@ -27,6 +28,9 @@ class Router {
       case sceneListRoute:
         final script = args as Script;
         return MaterialPageRoute(builder: (_) => SceneListPage(script: script));
+      case newSceneRoute:
+        final numScenes = args as int;
+        return MaterialPageRoute(builder: (_) => EditScenePage(isNewScene: true, numScenes: numScenes));
       case sceneDetailsRoute:
         final scene = args as Scene;
         return MaterialPageRoute(builder: (_) => SceneDetailsPage(scene: scene));

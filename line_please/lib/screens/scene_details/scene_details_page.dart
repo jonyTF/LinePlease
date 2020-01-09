@@ -15,11 +15,11 @@ import 'package:line_please/models/line.dart';
 import 'package:line_please/util/geom_utils.dart' as geom;
 
 class SceneDetailsPageState extends State<SceneDetailsPage> {
-  File imageFile;
-  Map<String, List<LineGroup>> textData = HashMap<String, List<LineGroup>>();
-  int imWidth = 1;
-  int imHeight = 1;
-  String curCharacter;
+  File _imageFile;
+  Map<String, List<LineGroup>> _textData = HashMap<String, List<LineGroup>>();
+  int _imWidth = 1;
+  int _imHeight = 1;
+  String _curCharacter;
 
   Offset _prevTapOffset;
   PhotoViewController _photoViewController;
@@ -43,24 +43,26 @@ class SceneDetailsPageState extends State<SceneDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (imageFile == null)
+    /*
+    if (_imageFile == null)
       _getTextData();
+    */
 
     final imageOverlay = CustomPaint(
       foregroundPainter: ImageOverlayPainter(
-        textData: textData,
-        imWidth: imWidth,
-        imHeight: imHeight,
-        character: curCharacter,
+        textData: _textData,
+        imWidth: _imWidth,
+        imHeight: _imHeight,
+        character: _curCharacter,
         mode: ImageOverlayPainter.SELECT_MODE,
       ),
-      child: imageFile != null ? Image.file(imageFile) : Image.asset('assets/img/test.jpg'),
+      child: _imageFile != null ? Image.file(_imageFile) : Image.asset('assets/img/test.jpg'),
     );
 
     // Reference: https://gist.github.com/sma/c6a9111d58c3deb83711106cec6152ee
     final photoView = PhotoView.customChild(
       child: imageOverlay,
-      childSize: Size(imWidth.toDouble(), imHeight.toDouble()),
+      childSize: Size(_imWidth.toDouble(), _imHeight.toDouble()),
       initialScale: PhotoViewComputedScale.covered,
       minScale: PhotoViewComputedScale.covered,
       controller: _photoViewController,
@@ -80,8 +82,8 @@ class SceneDetailsPageState extends State<SceneDetailsPage> {
           final zoomScale = _photoViewController.scale;
           final zoomPos = _photoViewController.position;
 
-          final scaledImWidth = imWidth*zoomScale;
-          final scaledImHeight = imHeight*zoomScale;
+          final scaledImWidth = _imWidth*zoomScale;
+          final scaledImHeight = _imHeight*zoomScale;
 
           final viewportX = scaledImWidth/2 - zoomPos.dx - viewportWidth/2;
           final viewportY = scaledImHeight/2 - zoomPos.dy - viewportHeight/2;
@@ -94,7 +96,7 @@ class SceneDetailsPageState extends State<SceneDetailsPage> {
           // TODO: Make this faster? Or rather, check that it's sufficiently
           // speedy in production mode.
           // TODO: Disable double tap to zoom in/out
-          for (final lineGroup in textData[curCharacter]) {
+          for (final lineGroup in _textData[_curCharacter]) {
             for (final line in lineGroup.lines) {
               if (line.rect.contains(offset)) {
                 setState(() {
@@ -144,16 +146,16 @@ class SceneDetailsPageState extends State<SceneDetailsPage> {
     _processScript(visionText);
 
     setState(() {
-      imageFile = f;
-      imWidth = decodedImage.width;
-      imHeight = decodedImage.height;
+      _imageFile = f;
+      _imWidth = decodedImage.width;
+      _imHeight = decodedImage.height;
     });
 
     _chooseCharacter();
   }
 
   void _chooseCharacter() async {
-    final result = await Navigator.pushNamed(context, characterSelectRoute, arguments: textData.keys.toList());
+    final result = await Navigator.pushNamed(context, characterSelectRoute, arguments: _textData.keys.toList());
     print('RESULT: $result');
     _modifyTextData(result);
   }
@@ -193,7 +195,7 @@ class SceneDetailsPageState extends State<SceneDetailsPage> {
   }
 
   void _setCharacter(String character) {
-    curCharacter = character;
+    _curCharacter = character;
   }
 
   void _deleteCharacters(List<String> characters) {
@@ -202,10 +204,10 @@ class SceneDetailsPageState extends State<SceneDetailsPage> {
     // Then delete the character.
 
     for (String characterToRemove in characters) {
-      for (LineGroup lineGroup in textData[characterToRemove]) {
+      for (LineGroup lineGroup in _textData[characterToRemove]) {
         _mergeLineGroupUp(lineGroup);
       }
-      textData.remove(characterToRemove);
+      _textData.remove(characterToRemove);
     }
   }
 
@@ -228,20 +230,20 @@ class SceneDetailsPageState extends State<SceneDetailsPage> {
   void _mergeCharacters(String mergeCharacter, List<String> charactersToMerge) {
     List<LineGroup> mergeLines = [];
     for (String character in charactersToMerge) {
-      mergeLines.addAll(textData[character]);
-      textData.remove(character);
+      mergeLines.addAll(_textData[character]);
+      _textData.remove(character);
     }
-    textData[mergeCharacter].addAll(mergeLines);
+    _textData[mergeCharacter].addAll(mergeLines);
   }
 
   void _renameCharacter(String oldName, String newName) {
-    textData[newName] = textData[oldName];
-    textData.remove(oldName);
+    _textData[newName] = _textData[oldName];
+    _textData.remove(oldName);
   }
 
   void _processScript(VisionText visionText) {
     // ---- FOR TESTING ------ //
-    textData['test'] = [];
+    _textData['test'] = [];
     /*for (TextBlock block in visionText.blocks) {
       textData['test'].add([block.boundingBox]);
     }*/
@@ -321,12 +323,12 @@ class SceneDetailsPageState extends State<SceneDetailsPage> {
 
     final lineGroup = LineGroup(lines: lines);
     // Add lineRects to the textData map;
-    if (textData.containsKey(curNameString)) {
-      textData[curNameString].add(nameLineGroup);
-      textData[curNameString].add(lineGroup);
+    if (_textData.containsKey(curNameString)) {
+      _textData[curNameString].add(nameLineGroup);
+      _textData[curNameString].add(lineGroup);
     } else {
-      textData[curNameString] = [nameLineGroup];
-      textData[curNameString] = [lineGroup];
+      _textData[curNameString] = [nameLineGroup];
+      _textData[curNameString] = [lineGroup];
     }
   }
 }
